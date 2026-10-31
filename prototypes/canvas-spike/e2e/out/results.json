@@ -1,0 +1,184 @@
+[
+  {
+    "lib": "foblex",
+    "mode": "desktop",
+    "name": "auto-generated node: rows match spec properties",
+    "pass": true,
+    "detail": "rows=3"
+  },
+  {
+    "lib": "foblex",
+    "mode": "desktop",
+    "name": "typed-port: text->entity refused",
+    "pass": true,
+    "detail": "edges 1->1, app-rejected=0"
+  },
+  {
+    "lib": "foblex",
+    "mode": "desktop",
+    "name": "typed-port: text->text connects (control)",
+    "pass": true,
+    "detail": "edges 1->2"
+  },
+  {
+    "lib": "foblex",
+    "mode": "desktop",
+    "name": "external drop: chip -> entity port binds",
+    "pass": true,
+    "detail": "bound text=\"← Alice\""
+  },
+  {
+    "lib": "foblex",
+    "mode": "desktop",
+    "name": "external drop: chip -> text port refused",
+    "pass": true,
+    "detail": "rejected=[\"drop bob→exp.draft\"]"
+  },
+  {
+    "lib": "foblex",
+    "mode": "desktop",
+    "name": "run: status + inline result from signals",
+    "pass": true,
+    "detail": "result=\"Expanded draft about Alice\""
+  },
+  {
+    "lib": "foblex",
+    "mode": "desktop",
+    "name": "two views: recipe renders from same contract",
+    "pass": true,
+    "detail": "nodes=3 edges=2"
+  },
+  {
+    "lib": "foblex",
+    "mode": "desktop",
+    "name": "console: no page errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "lib": "foblex",
+    "mode": "touch",
+    "name": "typed-port: text->entity refused by touch",
+    "pass": true,
+    "detail": "edges 1->1"
+  },
+  {
+    "lib": "foblex",
+    "mode": "touch",
+    "name": "typed-port: text->text connects by touch (control)",
+    "pass": true,
+    "detail": "edges 1->2"
+  },
+  {
+    "lib": "foblex",
+    "mode": "touch",
+    "name": "external drop by touch: chip -> entity port binds",
+    "pass": true,
+    "detail": "bound text=\"← Bob\""
+  },
+  {
+    "lib": "foblex",
+    "mode": "touch",
+    "name": "node move by touch",
+    "pass": true,
+    "detail": "dx=90"
+  },
+  {
+    "lib": "foblex",
+    "mode": "touch",
+    "name": "console: no page errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "lib": "vflow",
+    "mode": "desktop",
+    "name": "auto-generated node: rows match spec properties",
+    "pass": true,
+    "detail": "rows=3"
+  },
+  {
+    "lib": "vflow",
+    "mode": "desktop",
+    "name": "typed-port: text->entity refused",
+    "pass": true,
+    "detail": "edges 1->1, app-rejected=0"
+  },
+  {
+    "lib": "vflow",
+    "mode": "desktop",
+    "name": "typed-port: text->text connects (control)",
+    "pass": true,
+    "detail": "edges 1->2"
+  },
+  {
+    "lib": "vflow",
+    "mode": "desktop",
+    "name": "external drop: chip -> entity port binds",
+    "pass": true,
+    "detail": "bound text=\"← Alice\""
+  },
+  {
+    "lib": "vflow",
+    "mode": "desktop",
+    "name": "external drop: chip -> text port refused",
+    "pass": true,
+    "detail": "rejected=[\"drop bob→exp.draft\"]"
+  },
+  {
+    "lib": "vflow",
+    "mode": "desktop",
+    "name": "run: status + inline result from signals",
+    "pass": true,
+    "detail": "result=\"Expanded draft about Alice\""
+  },
+  {
+    "lib": "vflow",
+    "mode": "desktop",
+    "name": "two views: recipe renders from same contract",
+    "pass": true,
+    "detail": "nodes=3 edges=2"
+  },
+  {
+    "lib": "vflow",
+    "mode": "desktop",
+    "name": "console: no page errors",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "lib": "vflow",
+    "mode": "touch",
+    "name": "typed-port: text->entity refused by touch",
+    "pass": true,
+    "detail": "edges 1->1"
+  },
+  {
+    "lib": "vflow",
+    "mode": "touch",
+    "name": "typed-port: text->text connects by touch (control)",
+    "pass": true,
+    "detail": "edges 1->2"
+  },
+  {
+    "lib": "vflow",
+    "mode": "touch",
+    "name": "external drop by touch: chip -> entity port binds",
+    "pass": true,
+    "detail": "bound text=\"← Bob\""
+  },
+  {
+    "lib": "vflow",
+    "mode": "touch",
+    "name": "node move by touch",
+    "pass": true,
+    "detail": "dx=90"
+  },
+  {
+    "lib": "vflow",
+    "mode": "touch",
+    "name": "console: no page errors",
+    "pass": true,
+    "detail": ""
+  }
+]
