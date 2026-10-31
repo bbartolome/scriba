@@ -63,7 +63,13 @@
               "buildTarget": "canvas-spike:build:development"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "development",
+          "options": {
+            "host": "0.0.0.0",
+            "allowedHosts": [
+              "tride"
+            ]
+          }
         },
         "test": {
           "builder": "@angular/build:unit-test"
