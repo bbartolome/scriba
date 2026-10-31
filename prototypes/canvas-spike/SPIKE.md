@@ -2,7 +2,8 @@
 
 **Question:** Which Angular-native node-canvas library should the Graph runner use?
 **Candidates:** `@foblex/flow` 19.4.0 (default) vs `ngx-vflow` 2.7.0 (runner-up).
-**Verdict (proposed):** **`@foblex/flow`.** It passes all five must-criteria with no adapter workarounds. `ngx-vflow` also passes all five, but only after four workarounds, and its release cadence is slower.
+**Decision:** **`ngx-vflow`**, chosen by the user after reviewing the tablet and desktop screenshots. The ticket resolution records the reasons and the accepted costs.
+**Analysis verdict (before the decision):** `@foblex/flow` passed all five must-criteria with no adapter workarounds. `ngx-vflow` also passed all five, but only after four workarounds, and its release cadence is slower. The decision overrides that recommendation on visual grounds (see the Recommendation section below).
 
 Throwaway prototype. The app is in this directory; the checks are in `e2e/spike.cjs`. Both adapters render the same JSON contract (`src/app/spike/contract.ts`), share one runtime store, and use the same port generator.
 
