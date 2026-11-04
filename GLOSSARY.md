@@ -16,6 +16,14 @@ _Avoid_: Pipeline, workflow, recipe graph instance, chapter recipe
 A scene, beat or entity on the story graph. It points at a project file, or is a label only while nothing has been written yet.
 _Avoid_: Card, story block
 
+**Scene**:
+A unit of the book's prose, written as a draft file. The author chooses whether a draft holds one scene or a whole chapter of them.
+_Avoid_: Section, passage, scene entity
+
+**Beat**:
+A single story moment within a scene, usually just a short line on the story graph rather than written prose.
+_Avoid_: Plot point, step
+
 **Relation**:
 A directed, named link between two story nodes, such as order, causality or containment.
 _Avoid_: Story edge type, link type
