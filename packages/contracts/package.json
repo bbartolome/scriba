@@ -3,5 +3,53 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "scripts": {}
+  "exports": {
+    "./platform": {
+      "types": "./dist/platform/index.d.ts",
+      "import": "./dist/platform/index.js"
+    },
+    "./setup-auth": {
+      "types": "./dist/setup-auth/index.d.ts",
+      "import": "./dist/setup-auth/index.js"
+    },
+    "./providers": {
+      "types": "./dist/providers/index.d.ts",
+      "import": "./dist/providers/index.js"
+    },
+    "./project-store": {
+      "types": "./dist/project-store/index.d.ts",
+      "import": "./dist/project-store/index.js"
+    },
+    "./tool-registry": {
+      "types": "./dist/tool-registry/index.d.ts",
+      "import": "./dist/tool-registry/index.js"
+    },
+    "./agent-loop": {
+      "types": "./dist/agent-loop/index.d.ts",
+      "import": "./dist/agent-loop/index.js"
+    },
+    "./graph-runner": {
+      "types": "./dist/graph-runner/index.d.ts",
+      "import": "./dist/graph-runner/index.js"
+    },
+    "./compile-export": {
+      "types": "./dist/compile-export/index.d.ts",
+      "import": "./dist/compile-export/index.js"
+    },
+    "./shell": {
+      "types": "./dist/shell/index.d.ts",
+      "import": "./dist/shell/index.js"
+    },
+    "./genre-packs": {
+      "types": "./dist/genre-packs/index.d.ts",
+      "import": "./dist/genre-packs/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  }
 }
