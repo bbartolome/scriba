@@ -1,6 +1,6 @@
 # Scriba spec implementation surveys: status snapshot
 
-Snapshot of the implementation surveys for the ten Scriba spec issues (#16–#25, tracker #26 in `bbartolome/scriba`), taken 2026-11-05 at about 05:24 UTC.
+Snapshot of the implementation surveys for the ten Scriba spec issues (#16–#25, tracker #26 in `bbartolome/scriba`), taken 2026-11-05 at 11:51 UTC.
 
 These are drafts for owner review, not approved plans. The GitHub spec issues remain the source of truth. Nothing in this folder changes GitHub.
 
@@ -10,18 +10,18 @@ Review loop: an Opus read-only reviewer checks each survey against its spec, the
 
 ## Status
 
-| Spec | Survey file | Review status | Notes |
+| Spec | Survey file | Review status | Outstanding |
 |---|---|---|---|
-| #16 Platform | `16-platform-survey.md` | Round 2 revised. Round-3 review not run. | Round-2 must-fix items 1–4 applied. Owner decisions include serial phases on one branch (#3), the e2e target (#7 vs the harness line), and sibling route prefixes (#21 `/api/tools`, #24 `/api/graphs`). |
-| #17 Frontend shell | `17-frontend-shell-survey.md` | Round 3: REVISE. Revision not applied. | Open must-fix: the e2e must run through the dev server and the Shell's proxy, per #7. This overrides #16's harness line, which is a map conflict to flag. Also open: reconcile-tick tests, the nav-slot outlet for the project picker, and `ngsw-bypass` for `/events`. |
-| #18 Setup & auth | `18-setup-auth-survey.md` | Round 2 revised. Round-3 review not run. | Round-2 must-fix items 1–3 applied. Owner decisions before token-guard: Q1–Q4 and Q11. Q12 is a stop before tailnet. |
+| #16 Platform | `16-platform-survey.md` | Round 3: REVISE. Must-fix not yet sent. | Must-fix: the "unit tests never read `examples/`" rule has no acceptance criterion. Add a phase 7 lint rule, a matching `RuleTester` case, and a done-when line. Should-consider: mark the route-prefix question as pending §7 item 18; reword the installer `docker` stub as "never the real docker"; make the integration-branch merge pattern an owner confirmation. |
+| #17 Frontend shell | `17-frontend-shell-survey.md` | Round-3 must-fix addressed (survey agent report). Not re-reviewed. | Re-review needed. The e2e runs through the dev server and the Shell's proxy, per #7 (a map conflict with #16's harness line). |
+| #18 Setup & auth | `18-setup-auth-survey.md` | Round 3: REVISE. Must-fix not yet sent. | Must-fix: §3 `phase:tailnet` says the socket smoke test is "(a request)", but §8 makes it the one Platform-file exception. Should-consider: state that the `SCRIBA_PORT` gate on token-guard was dropped, and add it to Q2's owner confirmation. Add steps for the stdout print, invalid-token page, `Referrer-Policy`, token-free `Location`, and the port-suffixed cookie. Give `SETUP_TOKEN_INVALID` a status. Add a `MagicDNSEnabled: false` fixture. State that the GET/HEAD sweep reads only headers of streaming GETs and then aborts. |
 | #19 Model providers | `19-model-providers-survey.md` | **Approved** (round 3, no must-fix). Small fixes applied. | Owner decisions: Q13 (client types in `phase:contract`, which deviates from `phase:client`), Q15, Q18, Q19 (mock capabilities, asked of #16). |
-| #20 Project store | `20-project-store-survey.md` | Round 2: REVISE. Revision not confirmed. | The file changed at 05:23 UTC, but the agent stopped on a rate limit before reporting, so completion is unverified. Open must-fix: Work lists for files, search and pending-review; the overlay (OQ10); OQ20 (check the base before migrating); contract consumers in §6. |
-| #21 Tool registry | `21-tool-registry-survey.md` | Round 3: REVISE. Not yet routed to the agent. | Open must-fix: §6 dependency directions. The #22 and #23 rows point the wrong way, which would make a cycle. Missing rows: #22 `core-propose-graph` contract gate, #24 contract gate, and #23 draft provenance. |
-| #22 Genre packs | `22-genre-packs-survey.md` | Round 2 revised. Round-3 review not run. | Round-2 must-fix items 1–4 applied. Owner stops S0–S4 and O2, O9–O11 (see §8). Spec amendments to #22 and #20 are owner decisions. |
-| #23 Agent loop | `23-agent-loop-survey.md` | Round 2 revised. Round-3 review not run. | Round-2 must-fix items 1–6 applied. Owner decisions are the stop list in §8, including the #20 provenance field and the #24 origin question. |
-| #24 Graph runner | `24-graph-runner-survey.md` | Round 2 revised. Round-3 review not run. | Round-2 must-fix items 1–6 applied. Owner decisions: contract stops Q6–Q10, active project from the provider (Q12), and a sixth placeholder step "recipe run" requested of #16. |
-| #25 Compile & export | `25-compile-export-survey.md` | Round 2 revised. Round-3 review not run. | Round-2 must-fix items 1–6 applied. Step 0 is an owner decision on membership (amend #25 or comment on #12). The Typst spike and DOCX probe are the first export tickets. |
+| #20 Project store | `20-project-store-survey.md` | Round-2 must-fix and should-consider addressed (survey agent report). Not re-reviewed. | Re-review needed. |
+| #21 Tool registry | `21-tool-registry-survey.md` | Round-3 must-fix addressed (survey agent report). Not re-reviewed. | Re-review needed. Covers the §6 dependency directions and the missing contract rows. |
+| #22 Genre packs | `22-genre-packs-survey.md` | Round-3 must-fix addressed (survey agent report). Not re-reviewed. | Re-review needed. The image check now sits in #16 `phase:ci-publish`. |
+| #23 Agent loop | `23-agent-loop-survey.md` | Round-3 must-fix addressed (survey agent report). Not re-reviewed. | Re-review needed. |
+| #24 Graph runner | `24-graph-runner-survey.md` | Round 3: **APPROVED**, no must-fix. Should-consider notes not sent. | Should-consider: label Q2 as a map question; move Q14 to the contract stop points; add input and output nodes and the 7-step demo to the canvas phase; add #16 `phase:test-harness` to the engine gates; say how the "too new" refusal learns the supported version, how restart recovery finds the latest run log, and what the lazy-migration hook is in v1. |
+| #25 Compile & export | `25-compile-export-survey.md` | Round 3: REVISE. Must-fix not yet sent. | Must-fix: (1) §8 wording should read "the DOCX header and title-page probe", and each phase's done-when gets its own line. (2) The Lua filter misses raw HTML media and mid-draft YAML metadata. Fix by running Pandoc with `--from=markdown-yaml_metadata_block`, feeding metadata through `--metadata-file`, rewriting or dropping media in raw HTML blocks, and dropping raw Typst blocks. (3) Add an open question on the lazy-migration conflict (#12/#7 against narrowing `order` and `export` at `schemaVersion` 1). |
 
 ## Map conflicts recorded so far
 
@@ -34,10 +34,11 @@ These are flagged in the surveys for owner confirmation. None is resolved here.
 - #5 path safety, against Pandoc reading project paths directly (#25).
 - #6 GET never mutates, against lazy migration and the queue GET (#20, #21).
 - #2 phone scope, against #20's editor gating (#17).
+- #12/#7 lazy migration, against narrowing `order` and `export` at `schemaVersion` 1 (#25; open).
 
 ## Not yet done
 
-- Round-3 reviews for #16, #18, #22, #23, #24 and #25 are not run. Those agents stopped on a rate limit before reporting.
-- #21's round-3 must-fix item has not been sent to its survey agent.
-- #17's round-3 revision and #20's round-2 revision did not complete. The files on disk may be partly updated.
+- Re-reviews for #17, #20, #21, #22 and #23 have not been run.
+- The round-3 review for #18 returned REVISE. Its must-fix has not been sent to the survey agent.
+- Must-fix items for #16 and #25, and the should-consider notes for #24, have not been sent to their survey agents.
 - Once reviews are approved, each spec's phases will be run with `/navigator:pair`. That is a later step.
