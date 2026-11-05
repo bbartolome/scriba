@@ -1,9 +1,11 @@
 import 'reflect-metadata';
-import { Logger, type LogLevel as NestLogLevel } from '@nestjs/common';
+import { type INestApplication, Logger, type LogLevel as NestLogLevel } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { runPreListenBoot } from './modules/platform/boot/pre-listen.js';
 import { type LogLevel, parseScribaEnv } from './modules/platform/config/env.js';
+import { StreamPublisher } from './modules/platform/index.js';
+import { installTailnetFilter } from './modules/platform/network/tailnet-filter.js';
 import { resolveWebRoot } from './modules/platform/static/static.js';
 
 /**
@@ -36,13 +38,46 @@ async function main(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
     logger: LEVELS_BY_THRESHOLD[config.logLevel],
   });
+  // Before listen, so no connection from a tailnet peer is ever accepted.
+  installTailnetFilter(app.getHttpServer());
   const host = listenAll ? ALL_INTERFACES_HOST : LOOPBACK_HOST;
   await app.listen(config.port, host);
+  installShutdown(app);
 
   const web = resolveWebRoot();
   logger.log(
     `Listening on http://${host}:${config.port}; web root ${web.rootPath} (${web.source})`,
   );
+}
+
+/**
+ * On SIGTERM or SIGINT: end the open streams first, so clients see a clean close, then close the
+ * app and exit 0. [proposed] A second signal during shutdown is ignored. A failed close exits 1.
+ */
+function installShutdown(app: INestApplication): void {
+  let shuttingDown = false;
+  const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
+    if (shuttingDown) {
+      return;
+    }
+    shuttingDown = true;
+    logger.log(`${signal} received: ending streams, then closing the app`);
+    try {
+      app.get(StreamPublisher).closeAll();
+      await app.close();
+      logger.log('Shut down cleanly');
+      process.exit(0);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(error.message, error.stack);
+      } else {
+        logger.error(String(error));
+      }
+      process.exit(1);
+    }
+  };
+  process.on('SIGTERM', () => void shutdown('SIGTERM'));
+  process.on('SIGINT', () => void shutdown('SIGINT'));
 }
 
 main().catch((error: unknown) => {
