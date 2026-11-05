@@ -2,6 +2,10 @@
 node_modules/
 dist/
 .angular/
+coverage/
+
+# Repo-local book libraries used in dev
+.scratch-books/
 
 # Per-user Claude Code settings. Shared project settings belong in .claude/settings.json.
 .claude/settings.local.json
