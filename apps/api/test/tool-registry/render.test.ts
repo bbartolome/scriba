@@ -99,6 +99,18 @@ describe('POST /api/tools/:name/render', () => {
     });
   });
 
+  it('sits behind the Setup & auth guard, so a request without a session is refused', async () => {
+    const response = await fetch(`${running.baseUrl}/api/tools/summarize_people/render`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: running.baseUrl },
+      body: JSON.stringify({ arguments: { person: 'anna' }, entities: [ENTITIES.anna] }),
+    });
+    expect(response.status).toBe(401);
+    expect(((await response.json()) as { error: { code: string } }).error.code).toBe(
+      'AUTH_REQUIRED',
+    );
+  });
+
   it('answers without a model call', async () => {
     await api(running, 'POST', '/api/tools/summarize_people/render', {
       arguments: { person: 'anna' },
