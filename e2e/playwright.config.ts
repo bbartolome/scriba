@@ -33,6 +33,7 @@ async function freePorts(count: number): Promise<number[]> {
 }
 
 /**
+ * [proposed] SCRIBA_E2E_* names are test-only overrides and are not in the contracts' env table.
  * Each run gets its own ports, so a developer's `npm run dev` or another e2e run on the machine
  * cannot clash with this one. Playwright loads this file in the runner and again in each worker.
  * The first load sets the variables, and the workers keep them, so every process agrees.

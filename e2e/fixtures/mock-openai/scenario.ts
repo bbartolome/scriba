@@ -54,6 +54,7 @@ const StatusReplySchema = z.strictObject({
 
 const DropReplySchema = z.strictObject({ type: z.literal('drop') });
 
+/** [provisional §7 item 21] Records a client disconnect, which #19 needs for its abort test. */
 const HoldReplySchema = z.strictObject({
   type: z.literal('hold'),
   /**
@@ -63,6 +64,7 @@ const HoldReplySchema = z.strictObject({
   maxMs: z.number().int().min(1).max(MAX_TIMING_MS).default(10_000),
 });
 
+/** [provisional §7 item 21] Serves a scenario's GET /v1/models list. #19 needs the empty list. */
 const ModelsReplySchema = z.strictObject({
   type: z.literal('models'),
   /** Model ids for GET /v1/models. An empty list is valid. */

@@ -52,7 +52,8 @@ export interface RunningMockOpenAi {
 /**
  * Starts the mock. Requests go to `/scenario/<name>/v1/...`, so each scenario has its own turns and
  * its own recording. Mock-only endpoints sit beside them: `GET /scenario/<name>/__mock/requests`
- * and `POST /scenario/<name>/__mock/reset`.
+ * and `POST /scenario/<name>/__mock/reset`. [proposed: …/__mock/requests and …/__mock/reset, as the
+ * Platform survey names them] `GET /__mock/health` is the readiness URL for the e2e harness.
  */
 export async function startMockOpenAi(options: MockOpenAiOptions): Promise<RunningMockOpenAi> {
   const states = new Map<string, ScenarioState>();
