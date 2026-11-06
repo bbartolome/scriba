@@ -26,6 +26,7 @@ describe('phase:files acceptance (d): path safety over HTTP', () => {
     await symlink(join(outside, 'secret.md'), join(root, 'sources', 'escape.md'));
     await symlink(join(outside, 'created.md'), join(root, 'sources', 'dangling.md'));
     await symlink('../.scriba', join(root, 'sources', 'state-link'));
+    await symlink('../drafts/.versions', join(root, 'sources', 'versions-link'));
     expect((await call(h, 'POST', projectPath('book', '/activate'), {})).status).toBe(200);
   });
 
@@ -48,6 +49,7 @@ describe('phase:files acceptance (d): path safety over HTTP', () => {
     ['Drafts/.Versions/ch01.md', 403, 'PROJECT_PATH_RESERVED'],
     ['drafts/.VERSIONS/ch01.md', 403, 'PROJECT_PATH_RESERVED'],
     ['sources/state-link/settings.yaml', 403, 'PROJECT_PATH_RESERVED'],
+    ['sources/versions-link/ch01.md', 403, 'PROJECT_PATH_RESERVED'],
   ];
 
   it.each(readRows)('GET read of %j answers %i %s', async (path, status, code) => {

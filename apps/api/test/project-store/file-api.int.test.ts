@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { link, readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -115,6 +115,35 @@ describe('phase:files acceptance (f): file API', () => {
       }),
     ]);
     expect([a.status, b.status].sort()).toEqual([200, 409]);
+  });
+
+  it('two saves through a hard-link alias serialise on one inode: both finish, and the content is one whole write', async () => {
+    // Known limit: an atomic save renames a new file over the name it saves, so the other hard-link
+    // name keeps the old bytes afterwards. The lock keys both names on the inode, so the two saves
+    // never interleave. The test checks that they finish cleanly and leave one whole write behind.
+    await link(join(root(), 'drafts', 'ch01.md'), join(root(), 'drafts', 'alias-of-ch01.md'));
+    const current = await call(
+      h,
+      'GET',
+      `${projectPath('book', '/files/read')}?path=drafts%2Fch01.md`,
+    );
+    const base = (current.body as { hash: string }).hash;
+    const [a, b] = await Promise.all([
+      call(h, 'POST', projectPath('book', '/files/write'), {
+        path: 'drafts/ch01.md',
+        content: 'Via first name\n',
+        baseHash: base,
+      }),
+      call(h, 'POST', projectPath('book', '/files/write'), {
+        path: 'drafts/alias-of-ch01.md',
+        content: 'Via alias\n',
+        baseHash: base,
+      }),
+    ]);
+    expect([a.status, b.status]).toEqual([200, 200]);
+    expect(['Via first name\n', 'Via alias\n']).toContain(
+      await readFile(join(root(), 'drafts', 'ch01.md'), 'utf8'),
+    );
   });
 
   it('a write creates missing parent folders and leaves no temp file behind', async () => {
