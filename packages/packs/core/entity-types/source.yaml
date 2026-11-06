@@ -1,0 +1,24 @@
+# provisional: survey 22 §7 O10 (the root title is on the entity-type envelope, merged in #85)
+schemaVersion: 1
+kind: source
+title: Source
+description: A cited source the project draws from; the body holds its quotes and notes.
+fields:
+  type: object
+  properties:
+    title:
+      type: string
+      title: Title
+      minLength: 1
+    citation:
+      type: string
+      title: Citation
+      minLength: 1
+    url:
+      type: string
+      title: URL
+    reliability:
+      type: string
+      title: Reliability
+      description: A short note on how far the source can be trusted.
+  required: [title, citation, reliability]

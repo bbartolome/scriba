@@ -1,0 +1,25 @@
+# provisional: survey 22 §7 O1 (kind `style-profile`; the owner confirmation in O1 is still open)
+# provisional: survey 22 §7 O10 (the root title is on the entity-type envelope, merged in #85)
+schemaVersion: 1
+kind: style-profile
+title: Style profile
+description: The tone, target length and banned phrases to write in; the body holds sample paragraphs.
+fields:
+  type: object
+  properties:
+    tone:
+      type: string
+      title: Tone
+      minLength: 1
+    targetLength:
+      type: integer
+      title: Target length
+      description: Target length in words.
+      minimum: 1
+    bannedPhrases:
+      type: array
+      title: Banned phrases
+      items:
+        type: string
+      uniqueItems: true
+  required: [tone, targetLength, bannedPhrases]
