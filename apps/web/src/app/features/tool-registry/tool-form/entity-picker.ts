@@ -40,6 +40,45 @@ function safeJson(text: string): unknown {
 @Component({
   selector: 'app-entity-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    .picker {
+      display: grid;
+      gap: 0.25rem;
+    }
+    .label {
+      font: var(--mat-sys-title-small);
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.125rem 0.5rem;
+      border-radius: 999px;
+      background: var(--mat-sys-secondary-container);
+      color: var(--mat-sys-on-secondary-container);
+    }
+    .remove {
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .empty {
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .issue {
+      margin: 0;
+      color: var(--mat-sys-error);
+      font: var(--mat-sys-body-small);
+    }
+  `,
   template: `
     <div
       class="picker"

@@ -14,6 +14,26 @@ import { type FieldValue, STYLE_PROFILE_KIND } from './tool-form-model';
 @Component({
   selector: 'app-tool-field',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host {
+      display: block;
+    }
+    .field {
+      display: grid;
+      gap: 0.25rem;
+      margin-block: 0.75rem;
+    }
+    .slider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .issue {
+      margin: 0;
+      color: var(--mat-sys-error);
+      font: var(--mat-sys-body-small);
+    }
+  `,
   imports: [MatFormField, MatLabel, MatInput, MatSlideToggle, EntityPickerComponent],
   template: `
     <div

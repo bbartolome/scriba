@@ -53,6 +53,58 @@ export interface PortHandleContext {
 @Component({
   selector: 'app-tool-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    .tool-form {
+      display: block;
+      max-width: 40rem;
+    }
+    .issue {
+      margin: 0.25rem 0;
+      color: var(--mat-sys-error);
+      font: var(--mat-sys-body-small);
+    }
+    .failure {
+      color: var(--mat-sys-error);
+    }
+    .node {
+      display: grid;
+      gap: 0.75rem;
+      max-width: 22rem;
+      padding: 0.75rem;
+      border: 1px solid var(--mat-sys-outline-variant);
+      border-radius: 0.75rem;
+    }
+    .node-head .name {
+      font: var(--mat-sys-title-medium);
+    }
+    .ports {
+      display: grid;
+      gap: 0.375rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .port {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .port-type {
+      color: var(--mat-sys-on-surface-variant);
+    }
+    .handle {
+      width: 0.625rem;
+      height: 0.625rem;
+      border-radius: 50%;
+      background: var(--mat-sys-primary);
+    }
+    .validated pre {
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      background: var(--mat-sys-surface-container);
+      overflow-x: auto;
+    }
+  `,
   imports: [MatButton, NgTemplateOutlet, ToolFieldComponent],
   template: `
     @if (detail().form === undefined) {
@@ -154,6 +206,8 @@ export class ToolFormComponent {
   readonly portHandle = input<TemplateRef<PortHandleContext> | undefined>(undefined);
 
   protected readonly fields = computed(() => this.detail().form?.fields ?? []);
+  // The node body draws the port rows and the params from the descriptor, which keeps params to non-port fields (survey 21 §7 item 13).
+  // provisional: survey 21 §7 item 13
   protected readonly ports = computed(() => this.detail().ports);
 
   protected readonly values = linkedSignal<FieldValues>(() =>

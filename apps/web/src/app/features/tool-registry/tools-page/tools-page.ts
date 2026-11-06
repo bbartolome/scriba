@@ -108,6 +108,8 @@ export class ToolsPage implements OnInit {
         next: (loaded) => {
           if (loaded === null) return;
           this.entities.set(loaded.entities.entities);
+          // The style field starts on the project's style profile, which the caller fills in (survey 21 §7 item 7).
+          // provisional: survey 21 §7 item 7
           this.styleDefault.set(
             loaded.file === undefined ? undefined : styleProfileOf(loaded.file.content),
           );

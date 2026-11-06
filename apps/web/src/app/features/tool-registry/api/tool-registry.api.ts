@@ -52,6 +52,8 @@ export class ToolRegistryApi {
     return this.client.get(PROJECT_STORE_ROUTES.list.path, ProjectListResponseSchema);
   }
 
+  // The real entity listing, since phase:files is merged. The fake list in survey 21 §7 item 18 is not built.
+  // provisional: survey 21 §7 item 18
   listEntities(projectId: string): Observable<EntityListResponse> {
     return this.client.get(
       fill(PROJECT_STORE_ROUTES.entityList.path, { projectId }),
