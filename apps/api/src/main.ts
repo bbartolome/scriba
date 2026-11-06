@@ -1,10 +1,16 @@
 import 'reflect-metadata';
 import { type INestApplication, Logger, type LogLevel as NestLogLevel } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import { PROJECT_STORE_ROUTE_PREFIX } from '@bbartolome/scriba-contracts/project-store';
 import { AppModule } from './app.module.js';
 import { runPreListenBoot } from './modules/platform/boot/pre-listen.js';
 import { type LogLevel, parseScribaEnv } from './modules/platform/config/env.js';
-import { StreamPublisher } from './modules/platform/index.js';
+import { StreamPublisher, useJsonBodyParsers } from './modules/platform/index.js';
+
+/** The JSON limit on the project routes, which carry file content up to the 5 MB cap. */
+// provisional: survey 20 §7 item 21
+const PROJECT_STORE_BODY_LIMIT = '6mb';
 import { installTailnetFilter } from './modules/platform/network/tailnet-filter.js';
 import { resolveWebRoot } from './modules/platform/static/static.js';
 
@@ -35,9 +41,14 @@ async function main(): Promise<void> {
   const config = parseScribaEnv(process.env);
   await runPreListenBoot(config);
 
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: LEVELS_BY_THRESHOLD[config.logLevel],
+    bodyParser: false,
   });
+  // provisional: survey 20 §7 item 21 (the 5 MB file cap needs a larger JSON limit on the project routes only)
+  useJsonBodyParsers(app, [
+    { prefix: PROJECT_STORE_ROUTE_PREFIX, limit: PROJECT_STORE_BODY_LIMIT },
+  ]);
   // Before listen, so no connection from a tailnet peer is ever accepted.
   installTailnetFilter(app.getHttpServer());
   const host = listenAll ? ALL_INTERFACES_HOST : LOOPBACK_HOST;
