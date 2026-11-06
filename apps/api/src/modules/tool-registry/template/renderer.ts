@@ -15,8 +15,7 @@ import type {
  * line break in place.
  *
  * The lint's template check (loader-validation) and this renderer should share one parser. Until
- * the loader lane lands, this file has its own tokenizer, and it fails on every template the
- * lint would reject. // provisional: survey 21 §7 item 11
+ * the loader lane lands, this file has its own tokenizer. // provisional: survey 21 §7 item 11
  */
 
 /** A template the renderer cannot run: unbalanced blocks, an unknown expression or a non-input name. */
