@@ -4,12 +4,14 @@ import {
   ModelChoiceSchema,
   ModelListSchema,
   PresetSchema,
+  ProjectModelViewSchema,
   ProviderReadSchema,
   type ConnectionTestRequest,
   type ConnectionTestResult,
   type CreateProviderRequest,
   type ModelChoice,
   type ModelList,
+  type ProjectModelView,
   type ProviderDraft,
   type ProviderRead,
 } from '@bbartolome/scriba-contracts/providers';
@@ -19,6 +21,12 @@ import { ApiClient } from '../../shell';
 
 /** The `/api/providers` routes (spec #19, "HTTP API"). The contract names the shapes, not the paths. */
 const BASE = '/api/providers';
+
+/** The project's model routes: the override and the effective model, under the project's own path. */
+// provisional: survey 19 §7 Q16 (a project-scoped route, writes limited to the active project)
+function forProject(projectId: string, suffix: string): string {
+  return `${BASE}/projects/${encodeURIComponent(projectId)}/model${suffix}`;
+}
 
 /** A route for one provider. The id is encoded, so no id can add a segment. */
 function forProvider(id: string, suffix: string): string {
@@ -81,5 +89,20 @@ export class ProvidersApi {
 
   connectionTest(request: ConnectionTestRequest): Observable<ConnectionTestResult> {
     return this.client.post(`${BASE}/connection-test`, request, ConnectionTestResultSchema);
+  }
+
+  /** The project's override and its effective model. A project that is not active is refused. */
+  projectModel(projectId: string): Observable<ProjectModelView> {
+    return this.client.get(forProject(projectId, ''), ProjectModelViewSchema);
+  }
+
+  /** Sets the project's override. The file is written by the Project store, as an author action. */
+  setProjectOverride(projectId: string, choice: ModelChoice): Observable<ProjectModelView> {
+    return this.client.post(forProject(projectId, ''), choice, ProjectModelViewSchema);
+  }
+
+  /** Clears the project's override, so the project uses the app default. */
+  clearProjectOverride(projectId: string): Observable<ProjectModelView> {
+    return this.client.post(forProject(projectId, '/clear'), {}, ProjectModelViewSchema);
   }
 }

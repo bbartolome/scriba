@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { readFile } from 'node:fs/promises';
 import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
-import { Module, type INestApplication } from '@nestjs/common';
+import { Module, type INestApplication, type Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { parseScenario, type Scenario } from '../../../../e2e/fixtures/mock-openai/scenario.js';
 import {
@@ -13,6 +13,10 @@ import {
 import { PlatformModule } from '../../src/modules/platform/index.js';
 import { runPreListenBoot } from '../../src/modules/platform/boot/pre-listen.js';
 import { parseScribaEnv } from '../../src/modules/platform/config/env.js';
+import {
+  ProjectStoreModule,
+  type ProjectStoreConfig,
+} from '../../src/modules/project-store/index.js';
 import { ProvidersModule } from '../../src/modules/providers/index.js';
 import { SetupAuthModule } from '../../src/modules/setup-auth/setup-auth.module.js';
 import { signIn, withSession } from '../support/app.js';
@@ -22,9 +26,23 @@ import { signIn, withSession } from '../support/app.js';
 // The capabilities the client seam needs are on main: a `hold` reply records a client disconnect, and
 // a `models` step can return an empty list. // provisional: survey 19 §7 Q19
 
-/** The test root module: Platform, Setup & auth for the guard, and this module under test. */
-@Module({ imports: [PlatformModule, SetupAuthModule, ProvidersModule] })
-class ProvidersTestRootModule {}
+/**
+ * The test root module: Platform, Setup & auth for the guard, this module under test, and the Project
+ * store, which the project override reads and writes through. The store's samples folder is the
+ * one a test names, so a test can start a project from a sample.
+ */
+function providersRootModule(projectStore: ProjectStoreConfig): Type<object> {
+  @Module({
+    imports: [
+      PlatformModule,
+      SetupAuthModule,
+      ProvidersModule,
+      ProjectStoreModule.withConfig(projectStore),
+    ],
+  })
+  class ProvidersTestRootModule {}
+  return ProvidersTestRootModule;
+}
 
 export interface RunningProvidersApp {
   readonly app: INestApplication;
@@ -32,10 +50,17 @@ export interface RunningProvidersApp {
   readonly cookie: string;
 }
 
-/** Runs the pre-listen boot for a library, then starts the app on an ephemeral loopback port. */
-export async function startProvidersApp(booksDir: string): Promise<RunningProvidersApp> {
+/**
+ * Runs the pre-listen boot for a library, then starts the app on an ephemeral loopback port. The
+ * samples folder is empty unless a test names one (Start from sample reads it).
+ */
+export async function startProvidersApp(
+  booksDir: string,
+  examplesDir: string = join(booksDir, '..', 'no-samples'),
+): Promise<RunningProvidersApp> {
   await runPreListenBoot(parseScribaEnv({ SCRIBA_BOOKS_DIR: booksDir }));
-  const app = await NestFactory.create(ProvidersTestRootModule, { logger: false });
+  const root = providersRootModule({ booksDir, examplesDir });
+  const app = await NestFactory.create(root, { logger: false });
   await app.listen(0, '127.0.0.1');
   const { port } = app.getHttpServer().address() as AddressInfo;
   const baseUrl = `http://127.0.0.1:${port}`;

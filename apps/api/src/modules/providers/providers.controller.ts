@@ -11,6 +11,7 @@ import {
   type ExceptionFilter,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { ProjectIdSchema } from '@bbartolome/scriba-contracts/project-store';
 import {
   ConnectionTestRequestSchema,
   CreateProviderRequestSchema,
@@ -18,12 +19,14 @@ import {
   ProviderDraftSchema,
   ProviderIdSchema,
   SetAppDefaultRequestSchema,
+  SetProjectOverrideRequestSchema,
   SetProviderKeyRequestSchema,
   type ConnectionTestRequest,
   type ConnectionTestResult,
   type CreateProviderRequest,
   type ModelChoice,
   type ModelList,
+  type ProjectModelView,
   type ProviderDraft,
   type ProviderRead,
   type SetProviderKeyRequest,
@@ -32,6 +35,7 @@ import { ZodValidationPipe } from '../platform/index.js';
 import { ProviderClientService } from './client/provider-client-service.js';
 import { ProviderError } from './client/errors.js';
 import { runConnectionTest } from './connection-test.js';
+import { ProjectModelService } from './project-override/project-model.service.js';
 import { ProvidersRegistry, type ProviderList } from './registry/providers-registry.js';
 
 /**
@@ -63,6 +67,7 @@ export class ProvidersController {
   constructor(
     private readonly registry: ProvidersRegistry,
     private readonly client: ProviderClientService,
+    private readonly projectModel: ProjectModelService,
   ) {}
 
   /** Providers without secrets, the presets, and the app default. */
@@ -128,6 +133,37 @@ export class ProvidersController {
     @Body(new ZodValidationPipe(SetAppDefaultRequestSchema)) body: ModelChoice,
   ): Promise<ModelChoice> {
     return this.registry.setAppDefault(body);
+  }
+
+  /**
+   * The project's model view: its saved override (or null) and the effective model. The Project
+   * store's active-project gate applies, so a project that is not active is refused.
+   */
+  // provisional: survey 19 §7 Q16 (a project-scoped route; the writes below are limited to the active project)
+  @Get('projects/:projectId/model')
+  projectModelView(
+    @Param('projectId', new ZodValidationPipe(ProjectIdSchema)) projectId: string,
+  ): Promise<ProjectModelView> {
+    return this.projectModel.view(projectId);
+  }
+
+  /** Sets the project's override. The body is the choice, and the file is written by the Project store. */
+  @Post('projects/:projectId/model')
+  @HttpCode(200)
+  setProjectModel(
+    @Param('projectId', new ZodValidationPipe(ProjectIdSchema)) projectId: string,
+    @Body(new ZodValidationPipe(SetProjectOverrideRequestSchema)) body: ModelChoice,
+  ): Promise<ProjectModelView> {
+    return this.projectModel.set(projectId, body);
+  }
+
+  /** Clears the project's override, so the project uses the app default. The request has no body. */
+  @Post('projects/:projectId/model/clear')
+  @HttpCode(200)
+  clearProjectModel(
+    @Param('projectId', new ZodValidationPipe(ProjectIdSchema)) projectId: string,
+  ): Promise<ProjectModelView> {
+    return this.projectModel.clear(projectId);
   }
 
   /**
