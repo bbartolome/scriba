@@ -41,6 +41,12 @@ describe('contracts subpaths in the Angular build', () => {
     ).toBe(true);
   });
 
+  // phase:contract acceptance 1: the tool-registry slice imports into the web build.
+  it('exposes the output enum and the port-type enum from the tool-registry subpath', () => {
+    expect(toolRegistry.OUTPUT_KINDS).toEqual(['draft', 'entity', 'claims', 'graph', 'check']);
+    expect(toolRegistry.PORT_TYPES).toEqual(['text', 'entity', 'style']);
+  });
+
   it('exposes the Platform stream route from the platform subpath', () => {
     expect(platform.EVENTS_ROUTE).toBe('/events');
   });
