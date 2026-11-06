@@ -7,6 +7,7 @@ import {
   ModelChoiceSchema,
   ModelListSchema,
   PROVIDER_ERROR_CODES,
+  ProjectModelViewSchema,
   SetAppDefaultRequestSchema,
   SetProjectOverrideRequestSchema,
 } from '../../src/providers/index.js';
@@ -130,5 +131,35 @@ describe('connection-test result', () => {
     });
     expect(result.success).toBe(false);
     expect(PROVIDER_ERROR_CODES).not.toContain('AUTH_REQUIRED');
+  });
+});
+
+describe('project model view', () => {
+  const effective = {
+    choice: { providerId: 'ollama', model: 'local-model' },
+    source: 'app',
+    contextSize: 64000,
+  };
+
+  it('is the saved override, or null, next to the effective response', () => {
+    expect(ProjectModelViewSchema.safeParse({ override: null, effective }).success).toBe(true);
+    expect(
+      ProjectModelViewSchema.safeParse({
+        override: { providerId: 'ollama', model: 'local-model' },
+        effective: { ...effective, source: 'project' },
+      }).success,
+    ).toBe(true);
+  });
+
+  it('rejects an override that is not a model choice, and any extra field', () => {
+    expect(
+      ProjectModelViewSchema.safeParse({
+        override: { providerId: 'ollama', model: 'auto' },
+        effective,
+      }).success,
+    ).toBe(false);
+    expect(
+      ProjectModelViewSchema.safeParse({ override: null, effective, apiKey: 'x' }).success,
+    ).toBe(false);
   });
 });

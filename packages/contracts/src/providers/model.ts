@@ -67,3 +67,15 @@ export type SetProjectOverrideRequest = z.infer<typeof SetProjectOverrideRequest
 /** Per-project override clear request. It has no body, so the strict schema accepts only `{}`. */
 export const ClearProjectOverrideRequestSchema = z.strictObject({});
 export type ClearProjectOverrideRequest = z.infer<typeof ClearProjectOverrideRequestSchema>;
+
+/**
+ * The project's model view (spec #19, "HTTP API": the effective model choice for a project). It
+ * carries the saved override, or null when the project has none, next to the effective response,
+ * so the project model panel can show both. The override names a provider that may be gone, and
+ * then `effective` carries the warning. // provisional: survey 19 §7 Q16 (a project-scoped route)
+ */
+export const ProjectModelViewSchema = z.strictObject({
+  override: ModelChoiceSchema.nullable(),
+  effective: EffectiveModelSchema,
+});
+export type ProjectModelView = z.infer<typeof ProjectModelViewSchema>;
