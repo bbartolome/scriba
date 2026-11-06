@@ -179,6 +179,48 @@ describe('phase:loader-validation: the catalog lists core, genre and user tools'
   });
 });
 
+describe('phase:loader-validation: the built-in original and the read-only built-ins', () => {
+  it('returns the built-in original of a customised tool, for Compare and Revert', async () => {
+    const customised = (await builtInYaml('nonfiction', 'mystery_question')).replace(
+      "description: Pose a mystery question drawn from one person's notes.",
+      'description: Customised question.',
+    );
+    const { running } = await start({
+      seed: (booksDir) => writeUser(booksDir, 'mystery_question.yaml', customised),
+    });
+
+    const original = await api(running, 'GET', '/api/tools/mystery_question/builtin');
+    expect(original.status).toBe(200);
+    expect(original.body).toEqual({
+      name: 'mystery_question',
+      origin: 'nonfiction',
+      yaml: await builtInYaml('nonfiction', 'mystery_question'),
+    });
+    expect((await api(running, 'GET', '/api/tools/propose_graph/builtin')).status).toBe(200);
+    expect((await api(running, 'GET', '/api/tools/user_missing/builtin')).status).toBe(404);
+  });
+
+  it('refuses to delete a built-in that has no user copy, with TOOL_BUILTIN_READONLY', async () => {
+    const { running } = await start();
+    const refused = await api(running, 'DELETE', '/api/tools/cold_open');
+    expect(refused.status).toBe(409);
+    expect((refused.body as { error: { code: string } }).error.code).toBe('TOOL_BUILTIN_READONLY');
+  });
+
+  it('answers the enable switch of an unknown tool with TOOL_NOT_FOUND, and writes nothing', async () => {
+    const { running, library } = await start();
+    const settings = join(library.booksDir, '.scriba', 'settings.yaml');
+    const before = await readFile(settings, 'utf8');
+
+    const refused = await api(running, 'PUT', '/api/tools/no_such_tool/enabled', {
+      enabled: false,
+    });
+    expect(refused.status).toBe(404);
+    expect((refused.body as { error: { code: string } }).error.code).toBe('TOOL_NOT_FOUND');
+    expect(await readFile(settings, 'utf8')).toBe(before);
+  });
+});
+
 describe('phase:loader-validation: PUT writes the user pack and never the packs root', () => {
   it('writes /books/.scriba/packs/user/tools/<name>.yaml for a built-in, and leaves the packs root byte-identical', async () => {
     const packs = await copyOfPacks();
