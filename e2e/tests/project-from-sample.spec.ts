@@ -39,7 +39,7 @@ test('project from sample: start, activate, browse, and reject a parent path', a
   // Demo step 2: the copy on the host has no structure/ folder and a .gitignore that covers .scriba/.
   const folder = join(BOOKS, 'demo-book');
   const entries = (await readdir(folder)).sort();
-  expect(entries).toEqual(['.gitignore', 'drafts', 'project.yaml', 'sources']);
+  expect(entries).toEqual(['.gitignore', 'drafts', 'entities', 'project.yaml', 'sources']);
   expect(await readFile(join(folder, '.gitignore'), 'utf8')).toContain('.scriba/');
 
   // The files view lists the outline and renders it read-only.
