@@ -29,6 +29,20 @@ async function chatBodies(mock: TestMock, scenario: string) {
   );
 }
 
+/** Stops a run and waits for its end, so the test never closes the library under a write. */
+async function stopAndWait(
+  running: RunningAgentApp,
+  log: EventLog | undefined,
+  projectId: string,
+  runId: string,
+): Promise<void> {
+  await call(running, 'POST', agentPath(projectId, `/runs/${runId}/stop`), {});
+  await log?.until(
+    () => log?.agent(runId).some((event) => event.type === 'run-ended') === true,
+    'run end',
+  );
+}
+
 /** Starts a run and returns its id, once the call has been answered. */
 async function start(
   running: RunningAgentApp,
@@ -199,6 +213,10 @@ describe('phase file-tools-chat: acceptance (survey 23 §3)', () => {
       );
       expect(unknown.status).toBe(404);
       expect((unknown.body as { error: { code: string } }).error.code).toBe('AGENT_RUN_NOT_FOUND');
+      await log?.until(
+        () => log?.agent(runId).some((event) => event.type === 'run-ended') === true,
+        'run end',
+      );
     });
   });
 
@@ -366,7 +384,7 @@ describe('phase file-tools-chat: acceptance (survey 23 §3)', () => {
       const second = await start(running, 'book-busy', 'second');
       expect(second.status).toBe(409);
       expect((second.body as { error: { code: string } }).error.code).toBe('AGENT_RUN_ACTIVE');
-      await call(running, 'POST', agentPath('book-busy', `/runs/${runId}/stop`), {});
+      await stopAndWait(running, log, 'book-busy', runId);
     });
 
     it('refuses a project that is not the active one with AGENT_NO_ACTIVE_PROJECT', async () => {
