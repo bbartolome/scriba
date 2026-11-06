@@ -316,7 +316,8 @@ describe('the Shell, rendered through its routes', () => {
 
       const { router } = await render('/');
 
-      await vi.waitFor(() => expect(router.url).toBe('/setup'));
+      // The /setup chunk now carries the wizard, so its first load can take longer than the default.
+      await vi.waitFor(() => expect(router.url).toBe('/setup'), { timeout: 5000 });
     });
   });
 
@@ -414,7 +415,10 @@ describe('the Shell, rendered through its routes', () => {
       api.reply('POST', APP_DEFAULT_PATH, 200, { providerId: 'openrouter', model: '' });
 
       const { fixture, host, router } = await render('/settings');
-      await vi.waitFor(() => expect(host.querySelector('h1')?.textContent).toBe('Model providers'));
+      await vi.waitFor(() =>
+        expect(host.querySelector('select[name="defaultProvider"]')).not.toBeNull(),
+      );
+      expect(host.querySelector('h1')?.textContent).toBe('Settings');
 
       expect(router.url).toBe('/settings');
       expect(host.querySelector('nav.bottom')).not.toBeNull();
