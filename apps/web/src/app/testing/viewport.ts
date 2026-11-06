@@ -46,6 +46,10 @@ const DEFAULT_PREFERENCES: Readonly<Record<string, string>> = {
 };
 
 function matchesCondition(condition: string, viewport: Viewport): boolean {
+  // A screen viewport never matches print media. CodeMirror asks for it when it observes the DOM.
+  if (condition === 'print') {
+    return false;
+  }
   const match = /^\(\s*([a-z-]+)\s*(?::\s*([^)]+?)\s*)?\)$/.exec(condition);
   if (match === null) {
     throw new Error(`viewport fake cannot evaluate the condition ${condition}`);
