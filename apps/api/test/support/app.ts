@@ -16,10 +16,16 @@ import {
   ProjectStoreModule,
   type ProjectStoreConfig,
 } from '../../src/modules/project-store/index.js';
-import {
+import type {
+  ToolRegistryConfig,
   ToolRegistryModule,
-  type ToolRegistryConfig,
 } from '../../src/modules/tool-registry/index.js';
+
+/** The Tool registry module and its configuration, loaded for a test that gives a packs root. */
+interface LoadedRegistry {
+  readonly module: typeof ToolRegistryModule;
+  readonly config: ToolRegistryConfig;
+}
 import { runPreListenBoot } from '../../src/modules/platform/boot/pre-listen.js';
 import { parseScribaEnv } from '../../src/modules/platform/config/env.js';
 import { installTailnetFilter } from '../../src/modules/platform/network/tailnet-filter.js';
@@ -35,15 +41,16 @@ import { ProbeController } from './probe.controller.js';
 function createTestRootModule(
   publisher: StreamPublisherOptions | undefined,
   projectStore: ProjectStoreConfig,
-  registry: ToolRegistryConfig,
+  registry: LoadedRegistry | undefined,
 ): Type<object> {
   const platform =
     publisher === undefined ? PlatformModule : PlatformModule.withStreamPublisherOptions(publisher);
+  const toolRegistry = registry === undefined ? [] : [registry.module.withConfig(registry.config)];
   const imports = [
     platform,
     SetupAuthModule,
     ProjectStoreModule.withConfig(projectStore),
-    ToolRegistryModule.withConfig(registry),
+    ...toolRegistry,
   ];
 
   @Module({ imports, controllers: [ProbeController] })
@@ -62,8 +69,9 @@ export interface StartAppOptions {
   /** Installs the tailnet filter on the server, as main.ts does. Off unless a test opts in. */
   readonly tailnetFilter?: boolean;
   /**
-   * The packs root (`SCRIBA_PACKS_DIR`) for the Tool registry. Unset, it is an empty folder beside
-   * the library, so the built-ins are empty and a test sees only the user pack.
+   * The packs root (`SCRIBA_PACKS_DIR`). Giving one puts the Tool registry in the test root, with
+   * this packs root. Unset, the registry is not in the root, so Platform's settings tests see the
+   * same boot they always did.
    */
   readonly packsDir?: string;
 }
@@ -133,15 +141,20 @@ export async function startApp(
   booksDir: string,
   options: StartAppOptions = {},
 ): Promise<RunningApp> {
+  // The registry is loaded before the boot, because its executor's providers module registers its
+  // boot step when it is imported. A test without a packs root does not load the registry at all.
+  const registry: LoadedRegistry | undefined =
+    options.packsDir === undefined
+      ? undefined
+      : {
+          module: (await import('../../src/modules/tool-registry/index.js')).ToolRegistryModule,
+          config: { booksDir, packsDir: options.packsDir },
+        };
   await runPreListenBoot(parseScribaEnv({ SCRIBA_BOOKS_DIR: booksDir }));
 
   const projectStore: ProjectStoreConfig = {
     booksDir,
     examplesDir: options.examplesDir ?? join(booksDir, '..', 'no-samples'),
-  };
-  const registry: ToolRegistryConfig = {
-    booksDir,
-    packsDir: options.packsDir ?? join(booksDir, '..', 'no-packs'),
   };
   const app = await NestFactory.create<NestExpressApplication>(
     createTestRootModule(options.publisher, projectStore, registry),
