@@ -14,7 +14,7 @@ import { OutputKindSchema } from './vocabulary.js';
 
 /** One validation issue, as the form and the model-readable error both carry it. */
 export const ValidationIssueSchema = z.object({
-  /** The field the issue names, as a JSON path into the arguments. */
+  /** The field the issue names, as a JSON Pointer (RFC 6901) into the arguments, for example `/person`. */
   path: z.string().min(1),
   message: z.string(),
 });
