@@ -1,0 +1,18 @@
+# provisional: survey 22 §7 O10 (the root title is on the entity-type envelope, merged in #85)
+schemaVersion: 1
+kind: concept
+title: Concept
+description: A named idea the book explains; the body holds examples and where it is used.
+fields:
+  type: object
+  properties:
+    name:
+      type: string
+      title: Name
+      minLength: 1
+    definition:
+      type: string
+      title: Definition
+      description: What the concept means, in one line.
+      minLength: 1
+  required: [name, definition]

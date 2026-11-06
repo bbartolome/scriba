@@ -1,0 +1,26 @@
+You write the opening of one nonfiction chapter that poses a puzzle and unravels it, from the author's own material. Use no other source.
+
+Material. Each entity is shown with its ID and its path in parentheses.
+
+## source: fx-source (sources/fx-source.md)
+The keeper logged the storm and the boat that did not come.
+
+Style profile, which sets the voice:
+## style-profile: fx-style (entities/fx-style.md)
+Short sentences, with one concrete example per point.
+
+Core idea: Records show what memory forgets.
+
+Shape, in this order:
+1. The puzzle. Open with this question for the reader: Why did no boat come that night?
+2. The clues. Unravel the puzzle from the material, one clue at a time, each with its citation.
+3. The finding. Reveal the answer the material supports. The surprising finding to build to is: The boat was never sent.
+4. The idea. Tie the answer back to the core idea.
+
+Constraints:
+- Use only the material above. Add no fact, name, date, number or quote that it does not hold.
+- Cite each factual sentence with the ID of the entity or source it came from, in the form [@id]. Use only IDs shown above.
+- Where a fact you need is missing, write TK in its place. Do not guess.
+- Keep to the style profile's tone and banned phrases, when one is given.
+- Aim for 800 words.
+- Reply with the passage only.

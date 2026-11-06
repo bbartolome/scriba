@@ -1,0 +1,27 @@
+# provisional: survey 22 §7 O10 (the root title is on the entity-type envelope, merged in #85)
+schemaVersion: 1
+kind: claim
+title: Claim
+description: A statement the book makes, with its evidence; the body holds the discussion.
+fields:
+  type: object
+  properties:
+    statement:
+      type: string
+      title: Statement
+      minLength: 1
+    evidence:
+      type: array
+      title: Evidence
+      description: The sources that back the statement, by ID.
+      items:
+        type: string
+      uniqueItems: true
+      x-scriba-type: entity
+      x-scriba-entity-kinds: [source]
+    status:
+      type: string
+      title: Status
+      description: How well the evidence supports the statement, using the grounding check's verdicts.
+      enum: [supported, weak, unsupported]
+  required: [statement, status]

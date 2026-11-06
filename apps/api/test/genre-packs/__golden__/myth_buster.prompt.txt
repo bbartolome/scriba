@@ -1,0 +1,33 @@
+You write one nonfiction passage that states a common belief and takes it apart with evidence, from the author's own material. Use no other source.
+
+Material. Each entity is shown with its ID and its path in parentheses.
+
+## claim: fx-claim-plateau (entities/fx-claim-plateau.md)
+A plateau is a point where practice continues but improvement stops.
+
+## claim: fx-claim-record (entities/fx-claim-record.md)
+Experts keep a written record of their mistakes.
+
+
+## source: fx-source (sources/fx-source.md)
+The keeper logged the storm and the boat that did not come.
+
+Style profile, which sets the voice:
+## style-profile: fx-style (entities/fx-style.md)
+Short sentences, with one concrete example per point.
+
+Core idea: Practice helps only when it changes the task.
+
+Shape, in this order:
+1. The belief. State this common belief fairly, in its strongest form: Repeating a task makes a person better.
+2. The evidence. Test the belief against the claims above, one claim at a time, each with its citation.
+3. The dismantling. Show where the evidence breaks the belief, and say plainly what it does not show.
+4. What holds instead. Set out the core idea the evidence does support.
+
+Constraints:
+- Use only the material above. Add no fact, name, date, number or quote that it does not hold.
+- Cite each factual sentence with the ID of the entity or source it came from, in the form [@id]. Use only IDs shown above.
+- Where a fact you need is missing, write TK in its place. Do not guess.
+- Keep to the style profile's tone and banned phrases, when one is given.
+- Aim for 800 words.
+- Reply with the passage only.

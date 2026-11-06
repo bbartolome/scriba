@@ -1,0 +1,84 @@
+# provisional: survey 22 §7 O1 (snake_case name; the spec's kebab-case name `cold-open` stays in prose)
+schemaVersion: 1
+name: cold_open
+description: Open mid-scene with one person at one moment, then pull back to the idea.
+inputs:
+  type: object
+  properties:
+    coreIdea:
+      type: string
+      title: Core idea
+      description: The idea the passage serves, in one or two sentences.
+      minLength: 1
+      x-scriba-type: text
+      x-scriba-port: true
+    entityIds:
+      type: array
+      title: Entities
+      description: Entities and sources to draw from, by ID.
+      items:
+        type: string
+      uniqueItems: true
+      x-scriba-type: entity
+      x-scriba-port: true
+    styleProfile:
+      type: string
+      title: Style profile
+      description: One style profile entity, by ID.
+      x-scriba-type: style
+      x-scriba-port: true
+    length:
+      type: integer
+      title: Length
+      description: Target length in words.
+      minimum: 1
+      default: 800
+    tone:
+      type: string
+      title: Tone
+      description: Optional tone override for this passage.
+      minLength: 1
+    person:
+      type: string
+      title: Person
+      description: The person the passage stays with, by ID.
+      x-scriba-type: entity
+      x-scriba-entity-kinds: [person]
+      x-scriba-port: true
+    moment:
+      type: string
+      title: Moment
+      description: The moment to open on, in a sentence.
+      minLength: 1
+      x-scriba-type: text
+      x-scriba-port: true
+  required: [coreIdea, person]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |
+  You write the opening of one nonfiction chapter, from the author's own material. Use no other source.
+
+  Material. Each entity is shown with its ID and its path in parentheses.
+  {{entity person}}
+  {{#each entityIds}}
+  {{entity this}}
+  {{/each}}
+  {{#if styleProfile}}Style profile, which sets the voice:
+  {{entity styleProfile}}
+  {{/if}}
+  Core idea: {{coreIdea}}
+
+  Shape, in this order:
+  1. The moment. Start in the middle of one scene with the person above, at one moment in their work.{{#if moment}} The moment is: {{moment}}{{/if}}
+  2. The person. Give one concrete detail about them from that moment.
+  3. The pull-back. Widen from the moment to the question the core idea answers.
+  4. The idea. State the core idea in plain words to close the opening.
+
+  Constraints:
+  - Use only the material above. Add no fact, name, date, number or quote that it does not hold.
+  - Cite each factual sentence with the ID of the entity or source it came from, in the form [@id]. Use only IDs shown above.
+  - Where a fact you need is missing, write TK in its place. Do not guess.
+  - Keep to the style profile's tone and banned phrases, when one is given.{{#if tone}} Tone for this passage: {{tone}}.{{/if}}
+  - Aim for {{length}} words.
+  - Reply with the passage only.

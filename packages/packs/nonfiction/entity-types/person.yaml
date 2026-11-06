@@ -1,0 +1,27 @@
+# provisional: survey 22 §7 O10 (the root title is on the entity-type envelope, merged in #85)
+schemaVersion: 1
+kind: person
+title: Person
+description: A person the book draws on; the body holds what happened to them.
+fields:
+  type: object
+  properties:
+    name:
+      type: string
+      title: Name
+      minLength: 1
+    role:
+      type: string
+      title: Role
+      description: What the person did or was, in a few words.
+      minLength: 1
+    sources:
+      type: array
+      title: Sources
+      description: The sources that mention this person, by ID.
+      items:
+        type: string
+      uniqueItems: true
+      x-scriba-type: entity
+      x-scriba-entity-kinds: [source]
+  required: [name, role]

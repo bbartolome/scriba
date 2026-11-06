@@ -1,0 +1,90 @@
+# provisional: survey 22 §7 O1 (snake_case name; the spec's kebab-case name `myth-buster` stays in prose)
+schemaVersion: 1
+name: myth_buster
+description: State a common belief, then take it apart with evidence.
+inputs:
+  type: object
+  properties:
+    coreIdea:
+      type: string
+      title: Core idea
+      description: The idea the passage serves, in one or two sentences.
+      minLength: 1
+      x-scriba-type: text
+      x-scriba-port: true
+    entityIds:
+      type: array
+      title: Entities
+      description: Entities and sources to draw from, by ID.
+      items:
+        type: string
+      uniqueItems: true
+      x-scriba-type: entity
+      x-scriba-port: true
+    styleProfile:
+      type: string
+      title: Style profile
+      description: One style profile entity, by ID.
+      x-scriba-type: style
+      x-scriba-port: true
+    length:
+      type: integer
+      title: Length
+      description: Target length in words.
+      minimum: 1
+      default: 800
+    tone:
+      type: string
+      title: Tone
+      description: Optional tone override for this passage.
+      minLength: 1
+    belief:
+      type: string
+      title: Belief
+      description: The common belief to test, in one sentence.
+      minLength: 1
+      x-scriba-type: text
+      x-scriba-port: true
+    claimIds:
+      type: array
+      title: Claims
+      description: The claims the belief is tested against, by ID.
+      items:
+        type: string
+      minItems: 1
+      uniqueItems: true
+      x-scriba-type: entity
+      x-scriba-entity-kinds: [claim]
+      x-scriba-port: true
+  required: [coreIdea, belief, claimIds]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |
+  You write one nonfiction passage that states a common belief and takes it apart with evidence, from the author's own material. Use no other source.
+
+  Material. Each entity is shown with its ID and its path in parentheses.
+  {{#each claimIds}}
+  {{entity this}}
+  {{/each}}
+  {{#each entityIds}}
+  {{entity this}}
+  {{/each}}
+  {{#if styleProfile}}Style profile, which sets the voice:
+  {{entity styleProfile}}
+  {{/if}}
+  Core idea: {{coreIdea}}
+
+  Shape, in this order:
+  1. The belief. State this common belief fairly, in its strongest form: {{belief}}
+  2. The evidence. Test the belief against the claims above, one claim at a time, each with its citation.
+  3. The dismantling. Show where the evidence breaks the belief, and say plainly what it does not show.
+  4. What holds instead. Set out the core idea the evidence does support.
+
+  Constraints:
+  - Use only the material above. Add no fact, name, date, number or quote that it does not hold.
+  - Cite each factual sentence with the ID of the entity or source it came from, in the form [@id]. Use only IDs shown above.
+  - Where a fact you need is missing, write TK in its place. Do not guess.
+  - Keep to the style profile's tone and banned phrases, when one is given.{{#if tone}} Tone for this passage: {{tone}}.{{/if}}
+  - Aim for {{length}} words.
+  - Reply with the passage only.

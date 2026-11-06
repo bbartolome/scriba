@@ -1,0 +1,83 @@
+# provisional: survey 22 §7 O1 (snake_case name; the spec's kebab-case name `mystery-question` stays in prose)
+schemaVersion: 1
+name: mystery_question
+description: Open with a puzzle, then unravel it to a surprising finding.
+inputs:
+  type: object
+  properties:
+    coreIdea:
+      type: string
+      title: Core idea
+      description: The idea the passage serves, in one or two sentences.
+      minLength: 1
+      x-scriba-type: text
+      x-scriba-port: true
+    entityIds:
+      type: array
+      title: Entities
+      description: Entities and sources to draw from, by ID.
+      items:
+        type: string
+      uniqueItems: true
+      x-scriba-type: entity
+      x-scriba-port: true
+    styleProfile:
+      type: string
+      title: Style profile
+      description: One style profile entity, by ID.
+      x-scriba-type: style
+      x-scriba-port: true
+    length:
+      type: integer
+      title: Length
+      description: Target length in words.
+      minimum: 1
+      default: 800
+    tone:
+      type: string
+      title: Tone
+      description: Optional tone override for this passage.
+      minLength: 1
+    puzzle:
+      type: string
+      title: Puzzle
+      description: The question the opening poses to the reader.
+      minLength: 1
+      x-scriba-type: text
+      x-scriba-port: true
+    surprisingFinding:
+      type: string
+      title: Surprising finding
+      description: The finding the passage builds to, in one sentence.
+      minLength: 1
+      x-scriba-type: text
+      x-scriba-port: true
+  required: [coreIdea, puzzle]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |
+  You write the opening of one nonfiction chapter that poses a puzzle and unravels it, from the author's own material. Use no other source.
+
+  Material. Each entity is shown with its ID and its path in parentheses.
+  {{#each entityIds}}
+  {{entity this}}
+  {{/each}}
+  {{#if styleProfile}}Style profile, which sets the voice:
+  {{entity styleProfile}}
+  {{/if}}
+  Core idea: {{coreIdea}}
+
+  Shape, in this order:
+  1. The puzzle. Open with this question for the reader: {{puzzle}}
+  2. The clues. Unravel the puzzle from the material, one clue at a time, each with its citation.
+  3. The finding. Reveal the answer the material supports.{{#if surprisingFinding}} The surprising finding to build to is: {{surprisingFinding}}{{/if}}
+  4. The idea. Tie the answer back to the core idea.
+
+  Constraints:
+  - Use only the material above. Add no fact, name, date, number or quote that it does not hold.
+  - Cite each factual sentence with the ID of the entity or source it came from, in the form [@id]. Use only IDs shown above.
+  - Where a fact you need is missing, write TK in its place. Do not guess.
+  - Keep to the style profile's tone and banned phrases, when one is given.{{#if tone}} Tone for this passage: {{tone}}.{{/if}}
+  - Aim for {{length}} words.
+  - Reply with the passage only.

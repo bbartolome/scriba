@@ -30,7 +30,13 @@ export default tseslint.config(
     files: ['**/*.test.ts'],
     // e2e/ may read the samples. The contracts env test holds the SCRIBA_EXAMPLES_DIR default in
     // its spec table and reads no file, so it is exempt by name.
-    ignores: ['e2e/**', 'packages/contracts/test/platform/env.test.ts'],
+    // provisional: survey 22 §7 O14 (the nonfiction sample integration test reads examples/ by name;
+    // it is an integration test, not a unit test, and the alternative is a move to e2e/)
+    ignores: [
+      'e2e/**',
+      'packages/contracts/test/platform/env.test.ts',
+      'apps/api/test/samples.test.ts',
+    ],
     rules: {
       'no-restricted-syntax': [
         'error',
