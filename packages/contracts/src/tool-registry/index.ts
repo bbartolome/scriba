@@ -18,3 +18,7 @@ export * from './vocabulary.js';
 export * from './common.js';
 export * from './tool-spec.js';
 export * from './entity-type.js';
+export * from './lint.js';
+export * from './descriptors.js';
+export * from './function-schema.js';
+export * from './calls.js';
