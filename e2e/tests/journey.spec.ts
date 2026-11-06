@@ -23,7 +23,8 @@ test('app loads through the dev proxy', async ({ page, request }) => {
   page.on('pageerror', (error) => pageErrors.push(error));
 
   await page.goto('/');
-  await expect(page.locator('mat-toolbar')).toHaveText('Scriba');
+  // The toolbar also holds the theme toggle and the connection label, so check that the title is there.
+  await expect(page.locator('mat-toolbar')).toContainText('Scriba');
   expect(pageErrors).toEqual([]);
 });
 
