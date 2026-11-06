@@ -1,0 +1,36 @@
+{
+  "name": "malformed-tool-call",
+  "description": "The first turn returns a read_file tool call whose arguments are not valid JSON. The retry (turn 1) returns valid arguments. Once the tool result is sent, a text answer follows. Lists no models.",
+  "steps": [
+    {
+      "match": { "endpoint": "models" },
+      "respond": [{ "type": "models", "ids": [] }]
+    },
+    {
+      "match": { "turn": 0 },
+      "respond": [
+        {
+          "type": "tool-call",
+          "id": "call_read_malformed_1",
+          "name": "read_file",
+          "argumentChunks": ["{\"path\": \"chapter-1.md\"", ", \"lines\": "]
+        }
+      ]
+    },
+    {
+      "match": { "turn": 1 },
+      "respond": [
+        {
+          "type": "tool-call",
+          "id": "call_read_malformed_2",
+          "name": "read_file",
+          "argumentChunks": ["{\"path\": \"chapter-1.md\"", ", \"lines\": 20}"]
+        }
+      ]
+    },
+    {
+      "match": { "hasToolResult": true },
+      "respond": [{ "type": "content", "deltas": ["Chapter 1 ", "reads well."] }]
+    }
+  ]
+}

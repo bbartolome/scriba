@@ -10,13 +10,16 @@
     "packages/contracts",
     "apps/api",
     "apps/web",
-    "packages/packs"
+    "packages/packs",
+    "e2e"
   ],
   "scripts": {
     "dev": "mkdir -p .scratch-books && npm run build -w @bbartolome/scriba-contracts && npm run build -w @bbartolome/scriba-api && concurrently -k -n api-tsc,api,web,contracts-tsc \"tsc -p apps/api/tsconfig.json --watch --preserveWatchOutput\" \"node --watch apps/api/dist/main.js\" \"npm run start -w @bbartolome/scriba-web\" \"tsc -p packages/contracts/tsconfig.json --watch --preserveWatchOutput\"",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "lint": "eslint . && prettier --check ."
+    "lint": "eslint . && prettier --check .",
+    "e2e": "npm run build -w @bbartolome/scriba-contracts -w @bbartolome/scriba-api && npm run e2e -w @bbartolome/scriba-e2e",
+    "mock:openai": "npm run mock:openai -w @bbartolome/scriba-e2e --"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
