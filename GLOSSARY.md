@@ -53,3 +53,9 @@ _Avoid_: Job, execution
 **Pending change**:
 A proposed edit to a project file that waits for the author to accept or reject it.
 _Avoid_: Draft change, suggestion, proposal
+
+## Agent
+
+**Agent run**:
+One execution of the agent loop for an author's intent. It calls the project's tools and proposes its writes as pending changes. Its pending changes carry the run's origin.
+_Avoid_: Run (that word is for recipes), session, job

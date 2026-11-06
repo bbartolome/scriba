@@ -30,6 +30,17 @@ describe('contracts subpaths in the Angular build', () => {
     }
   });
 
+  // phase:contract acceptance 1: the project-store slice imports into the web build.
+  it('exposes the project.yaml schema from the project-store subpath', () => {
+    expect(
+      projectStore.ProjectYamlSchema.safeParse({
+        schemaVersion: 1,
+        title: 'Book',
+        genrePack: 'nonfiction',
+      }).success,
+    ).toBe(true);
+  });
+
   it('exposes the Platform stream route from the platform subpath', () => {
     expect(platform.EVENTS_ROUTE).toBe('/events');
   });
