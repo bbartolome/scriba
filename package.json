@@ -1,0 +1,33 @@
+{
+  "name": "scriba",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "packageManager": "npm@11.19.0",
+  "workspaces": [
+    "packages/contracts",
+    "apps/api",
+    "apps/web",
+    "packages/packs"
+  ],
+  "scripts": {
+    "dev": "mkdir -p .scratch-books && npm run build -w @bbartolome/scriba-contracts && npm run build -w @bbartolome/scriba-api && concurrently -k -n api-tsc,api,web,contracts-tsc \"tsc -p apps/api/tsconfig.json --watch --preserveWatchOutput\" \"node --watch apps/api/dist/main.js\" \"npm run start -w @bbartolome/scriba-web\" \"tsc -p packages/contracts/tsconfig.json --watch --preserveWatchOutput\"",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint . && prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "concurrently": "10.0.6",
+    "eslint": "^10.14.0",
+    "prettier": "^3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "minimatch": "11.0.5"
+  }
+}

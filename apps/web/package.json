@@ -1,0 +1,27 @@
+{
+  "name": "@bbartolome/scriba-web",
+  "version": "0.0.0-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "ng build",
+    "start": "ng serve --host 127.0.0.1 --port 4200 --proxy-config proxy.conf.js",
+    "test": "ng test --watch=false"
+  },
+  "dependencies": {
+    "@angular/cdk": "22.2.6",
+    "@angular/common": "22.2.4",
+    "@angular/compiler": "22.2.4",
+    "@angular/core": "22.2.4",
+    "@angular/material": "22.2.6",
+    "@angular/platform-browser": "22.2.4",
+    "@angular/router": "22.2.4",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@angular/build": "22.2.6",
+    "@angular/cli": "22.2.6",
+    "@angular/compiler-cli": "22.2.4",
+    "jsdom": "30.0.0"
+  }
+}

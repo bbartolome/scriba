@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    name: lint, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title (Conventional Commits)
+        if: github.event_name == 'pull_request'
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|chore|docs|refactor|test|build|ci|perf|style|revert)(\([a-z0-9/_-]+\))?!?: .+'
+          if [[ "$TITLE" =~ $pattern ]]; then
+            echo "PR title is Conventional Commits: $TITLE"
+          else
+            echo "PR title is not Conventional Commits: $TITLE" >&2
+            echo "Expected a form like 'feat(api): add health route'." >&2
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
