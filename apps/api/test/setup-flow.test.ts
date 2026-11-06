@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { parse, stringify } from 'yaml';
@@ -306,8 +306,9 @@ describe('setup flow: preferences', () => {
     });
   });
 
-  it('saving the theme alone changes only that field in settings.yaml', async () => {
+  it('saving the theme alone changes only that field in settings.yaml, and no project', async () => {
     const seeded = await settingsDocument(library.booksDir);
+    const entriesBefore = (await readdir(library.booksDir)).sort();
     const seededPreferences = {
       authorDisplayName: 'Ada Lovelace',
       theme: 'light',
@@ -326,6 +327,7 @@ describe('setup flow: preferences', () => {
     const after = await settingsDocument(library.booksDir);
     expect(after['preferences']).toEqual({ ...seededPreferences, theme: 'dark' });
     expect(after['other']).toEqual(seeded['other']);
+    expect((await readdir(library.booksDir)).sort()).toEqual(entriesBefore);
   });
 
   it('gives back the saved values on a re-read, so a re-run shows them as defaults', async () => {
@@ -350,6 +352,20 @@ describe('setup flow: preferences', () => {
       '/api/setup-auth/preferences',
     );
     expect(body.defaultGenrePack).toBeNull();
+  });
+
+  it('gives a new project the saved default genre pack when the request names none', async () => {
+    await sendJson(running, 'PATCH', '/api/setup-auth/preferences', {
+      defaultGenrePack: 'fiction',
+    });
+
+    const created = await sendJson(running, 'POST', '/api/project-store/projects/new', {
+      title: 'Saved Default Book',
+      folderName: 'saved-default-book',
+    });
+
+    expect(created.status).toBe(201);
+    expect((created.body as { project: { genrePack?: string } }).project.genrePack).toBe('fiction');
   });
 
   it('refuses a genre pack the app does not load, and writes nothing', async () => {
