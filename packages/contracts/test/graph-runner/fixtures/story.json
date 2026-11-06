@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "view": "story",
+  "name": "Chapter one map",
+  "nodes": [
+    {
+      "id": "ada",
+      "kind": "entity",
+      "label": "Ada Lovelace",
+      "path": "entities/ada-lovelace.md",
+      "position": { "x": 0, "y": 0 }
+    },
+    {
+      "id": "opening",
+      "kind": "scene",
+      "label": "Opening",
+      "path": "drafts/chapter-1.md",
+      "position": { "x": 240, "y": 0 }
+    },
+    {
+      "id": "arrival",
+      "kind": "beat",
+      "label": "Arrival at the house",
+      "position": { "x": 240, "y": 120 }
+    },
+    {
+      "id": "closing",
+      "kind": "scene",
+      "label": "Closing",
+      "path": "drafts/chapter-2.md",
+      "position": { "x": 480, "y": 0 }
+    }
+  ],
+  "edges": [
+    { "id": "e-order", "from": "opening", "to": "closing", "relation": "order" },
+    { "id": "e-contains", "from": "opening", "to": "arrival", "relation": "containment" },
+    { "id": "e-cause", "from": "arrival", "to": "closing", "relation": "causality" },
+    { "id": "e-appears", "from": "ada", "to": "opening", "relation": "appears in" }
+  ]
+}
