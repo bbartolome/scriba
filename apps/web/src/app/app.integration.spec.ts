@@ -104,7 +104,7 @@ describe('the Shell, rendered through its routes', () => {
       expect(host.querySelector('nav.bottom')).not.toBeNull();
       expect(host.querySelector('nav.rail')).toBeNull();
       expect(host.querySelector('mat-nav-list')).toBeNull();
-      expect(navEntries(host).map((entry) => entry.label)).toEqual(['Home']);
+      expect(navEntries(host).map((entry) => entry.label)).toEqual(['Home', 'Projects']);
     });
 
     it('keeps a phone in landscape on the bottom nav', async () => {
@@ -125,6 +125,7 @@ describe('the Shell, rendered through its routes', () => {
       expect(host.querySelector('nav.rail')).not.toBeNull();
       expect(navEntries(host)).toEqual([
         { label: 'Home', icon: 'home', href: '/' },
+        { label: 'Projects', icon: 'folder', href: '/projects' },
         { label: 'Dummy', icon: 'science', href: '/dummy' },
       ]);
     });
@@ -134,7 +135,11 @@ describe('the Shell, rendered through its routes', () => {
       viewport.resize(DESKTOP);
       const desktop = await render('/');
       expect(desktop.host.querySelector('mat-nav-list')).not.toBeNull();
-      expect(navEntries(desktop.host).map((entry) => entry.label)).toEqual(['Home', 'Dummy']);
+      expect(navEntries(desktop.host).map((entry) => entry.label)).toEqual([
+        'Home',
+        'Projects',
+        'Dummy',
+      ]);
       desktop.fixture.destroy();
 
       viewport.resize(IPAD_PRO_12_PORTRAIT);
@@ -359,7 +364,11 @@ describe('the Shell, rendered through its routes', () => {
       viewport.resize(DESKTOP);
 
       const outside = await render('/');
-      expect(navEntries(outside.host).map((entry) => entry.label)).toEqual(['Home', 'Dummy']);
+      expect(navEntries(outside.host).map((entry) => entry.label)).toEqual([
+        'Home',
+        'Projects',
+        'Dummy',
+      ]);
       outside.fixture.destroy();
 
       TestBed.resetTestingModule();

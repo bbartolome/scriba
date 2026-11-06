@@ -57,5 +57,7 @@ export {
   type SettingsSectionRegistration,
   type SettingsSectionStep,
 } from './settings/settings-file.js';
+export { parseScribaEnv, type ScribaConfig } from './config/env.js';
+export { type BodyLimitRoute, useJsonBodyParsers } from './http/body-parsers.js';
 export { ApiException, PLATFORM_CODES } from './errors/api-error.js';
 export { ZodValidationPipe, type SafeParser } from './validation/zod-validation.pipe.js';

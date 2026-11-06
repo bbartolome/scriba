@@ -7,7 +7,8 @@ import { expect, test } from '@playwright/test';
  */
 const JOURNEY_STEPS = [
   { name: 'setup', owner: 'Setup & auth' },
-  { name: 'project from sample', owner: 'Project store' },
+  // Live since phase:files. The step runs in project-from-sample.spec.ts, so the journey only marks it.
+  { name: 'project from sample', owner: 'Project store', live: true },
   { name: 'agent run', owner: 'Agent loop' },
   { name: 'accept change', owner: 'Project store review' },
   { name: 'manuscript', owner: 'Compile & export' },
@@ -30,6 +31,11 @@ test('app loads through the dev proxy', async ({ page, request }) => {
 
 test('journey', async () => {
   for (const [index, step] of JOURNEY_STEPS.entries()) {
+    if ('live' in step && step.live) {
+      await test.step(`${index + 1}. ${step.name} (live, ${step.owner}; see project-from-sample.spec.ts)`, () =>
+        undefined);
+      continue;
+    }
     await test.step(`${index + 1}. ${step.name} (pending, ${step.owner})`, () => {
       // Playwright has no pending status. The PENDING line shows in the run output, and the
       // annotation is kept for reports that read it.

@@ -5,7 +5,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Module, type INestApplication, type Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { PlatformModule, type StreamPublisherOptions } from '../../src/modules/platform/index.js';
+import { PROJECT_STORE_ROUTE_PREFIX } from '@bbartolome/scriba-contracts/project-store';
+import type { NestExpressApplication } from '@nestjs/platform-express';
+import {
+  PlatformModule,
+  type StreamPublisherOptions,
+  useJsonBodyParsers,
+} from '../../src/modules/platform/index.js';
+import {
+  ProjectStoreModule,
+  type ProjectStoreConfig,
+} from '../../src/modules/project-store/index.js';
 import { runPreListenBoot } from '../../src/modules/platform/boot/pre-listen.js';
 import { parseScribaEnv } from '../../src/modules/platform/config/env.js';
 import { installTailnetFilter } from '../../src/modules/platform/network/tailnet-filter.js';
@@ -18,11 +28,13 @@ import { ProbeController } from './probe.controller.js';
  * Express loader, so the static fallback would not be exercised. The publisher options are set
  * only when a test passes them, and the module is otherwise the production module.
  */
-function createTestRootModule(publisher: StreamPublisherOptions | undefined): Type<object> {
-  const imports =
-    publisher === undefined
-      ? [PlatformModule, SetupAuthModule]
-      : [PlatformModule.withStreamPublisherOptions(publisher), SetupAuthModule];
+function createTestRootModule(
+  publisher: StreamPublisherOptions | undefined,
+  projectStore: ProjectStoreConfig,
+): Type<object> {
+  const platform =
+    publisher === undefined ? PlatformModule : PlatformModule.withStreamPublisherOptions(publisher);
+  const imports = [platform, SetupAuthModule, ProjectStoreModule.withConfig(projectStore)];
 
   @Module({ imports, controllers: [ProbeController] })
   class TestRootModule {}
@@ -32,6 +44,11 @@ function createTestRootModule(publisher: StreamPublisherOptions | undefined): Ty
 export interface StartAppOptions {
   /** Overrides for the stream publisher, for example a short heartbeat interval. */
   readonly publisher?: StreamPublisherOptions;
+  /**
+   * The folder of samples for Start from sample. Unset, it is an empty folder beside the library, so
+   * a sample request fails as not found.
+   */
+  readonly examplesDir?: string;
   /** Installs the tailnet filter on the server, as main.ts does. Off unless a test opts in. */
   readonly tailnetFilter?: boolean;
 }
@@ -103,7 +120,18 @@ export async function startApp(
 ): Promise<RunningApp> {
   await runPreListenBoot(parseScribaEnv({ SCRIBA_BOOKS_DIR: booksDir }));
 
-  const app = await NestFactory.create(createTestRootModule(options.publisher), { logger: false });
+  const projectStore: ProjectStoreConfig = {
+    booksDir,
+    examplesDir: options.examplesDir ?? join(booksDir, '..', 'no-samples'),
+  };
+  const app = await NestFactory.create<NestExpressApplication>(
+    createTestRootModule(options.publisher, projectStore),
+    {
+      logger: false,
+      bodyParser: false,
+    },
+  );
+  useJsonBodyParsers(app, [{ prefix: PROJECT_STORE_ROUTE_PREFIX, limit: '6mb' }]);
   if (options.tailnetFilter === true) {
     installTailnetFilter(app.getHttpServer());
   }

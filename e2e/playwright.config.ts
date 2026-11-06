@@ -77,6 +77,8 @@ export default defineConfig({
       env: {
         SCRIBA_PORT: String(API_PORT),
         SCRIBA_BOOKS_DIR: booksDir,
+        // The repo's examples folder, so Start from sample copies the nonfiction skeleton (survey 20 §5, §7 item 14).
+        SCRIBA_EXAMPLES_DIR: join(REPO_ROOT, 'examples'),
         SCRIBA_DEV_ORIGINS: `127.0.0.1:${WEB_PORT},localhost:${WEB_PORT}`,
       },
       reuseExistingServer: false,
