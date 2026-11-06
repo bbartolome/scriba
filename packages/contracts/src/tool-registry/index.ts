@@ -22,3 +22,7 @@ export * from './lint.js';
 export * from './descriptors.js';
 export * from './function-schema.js';
 export * from './calls.js';
+export * from './errors.js';
+export * from './catalog.js';
+export * from './routes.js';
+export * from './events.js';
