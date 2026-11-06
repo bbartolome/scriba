@@ -1,5 +1,13 @@
-import { isAbsolute } from 'node:path';
+import { isAbsolute, resolve } from 'node:path';
 import { SCRIBA_ENV_DEFAULTS } from '@bbartolome/scriba-contracts/platform';
+import { API_ROOT } from './paths.js';
+
+/**
+ * [proposed] Dev default for `SCRIBA_BOOKS_DIR` when it is unset and `NODE_ENV` is not
+ * `production`: a git-ignored folder at the repo root. The image sets `NODE_ENV=production`, so
+ * the container keeps the contracts default `/books`. The contracts table is unchanged.
+ */
+export const DEV_BOOKS_DIR = resolve(API_ROOT, '../../.scratch-books');
 
 /** [proposed] Accepted `SCRIBA_LOG_LEVEL` values. The contracts give the default (`info`) but not the set. */
 export const LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const;
@@ -49,7 +57,9 @@ export function parseScribaEnv(env: Env): ScribaConfig {
     throw new ScribaConfigError('SCRIBA_PORT', rawPort, 'must be an integer from 1 to 65535');
   }
 
-  const booksDir = readVariable(env, 'SCRIBA_BOOKS_DIR') ?? SCRIBA_ENV_DEFAULTS.SCRIBA_BOOKS_DIR;
+  const booksDirDefault =
+    env.NODE_ENV === 'production' ? SCRIBA_ENV_DEFAULTS.SCRIBA_BOOKS_DIR : DEV_BOOKS_DIR;
+  const booksDir = readVariable(env, 'SCRIBA_BOOKS_DIR') ?? booksDirDefault;
   if (!isAbsolute(booksDir)) {
     throw new ScribaConfigError('SCRIBA_BOOKS_DIR', booksDir, 'must be an absolute path');
   }

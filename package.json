@@ -13,7 +13,7 @@
     "packages/packs"
   ],
   "scripts": {
-    "dev": "mkdir -p .scratch-books && npm run build -w @bbartolome/scriba-contracts && npm run build -w @bbartolome/scriba-api && SCRIBA_BOOKS_DIR=\"$(pwd)/.scratch-books\" concurrently -k -n api-tsc,api,web,contracts-tsc \"tsc -p apps/api/tsconfig.json --watch --preserveWatchOutput\" \"node --watch apps/api/dist/main.js\" \"npm run start -w @bbartolome/scriba-web\" \"tsc -p packages/contracts/tsconfig.json --watch --preserveWatchOutput\"",
+    "dev": "mkdir -p .scratch-books && npm run build -w @bbartolome/scriba-contracts && npm run build -w @bbartolome/scriba-api && concurrently -k -n api-tsc,api,web,contracts-tsc \"tsc -p apps/api/tsconfig.json --watch --preserveWatchOutput\" \"node --watch apps/api/dist/main.js\" \"npm run start -w @bbartolome/scriba-web\" \"tsc -p packages/contracts/tsconfig.json --watch --preserveWatchOutput\"",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "eslint . && prettier --check ."

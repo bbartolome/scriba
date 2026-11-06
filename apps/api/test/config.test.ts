@@ -1,15 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { parseScribaEnv, ScribaConfigError } from '../src/modules/platform/config/env.js';
+import {
+  DEV_BOOKS_DIR,
+  parseScribaEnv,
+  ScribaConfigError,
+} from '../src/modules/platform/config/env.js';
 
 describe('parseScribaEnv', () => {
-  it('uses the contracts defaults when nothing is set', () => {
+  it('uses the repo-local dev folder for the library when nothing is set outside production', () => {
     expect(parseScribaEnv({})).toEqual({
       port: 8080,
-      booksDir: '/books',
+      booksDir: DEV_BOOKS_DIR,
       hostLibrary: undefined,
       composeVersion: undefined,
       logLevel: 'info',
     });
+  });
+
+  it('uses the contracts container default /books in production', () => {
+    expect(parseScribaEnv({ NODE_ENV: 'production' }).booksDir).toBe('/books');
+  });
+
+  it('points the dev default at a folder that is absolute and inside the repo', () => {
+    expect(DEV_BOOKS_DIR.endsWith('/.scratch-books')).toBe(true);
+    expect(DEV_BOOKS_DIR.startsWith('/')).toBe(true);
   });
 
   it('reads the SCRIBA_* values it is given', () => {
