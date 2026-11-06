@@ -1,0 +1,26 @@
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: light dark;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+        theme-type: color-scheme,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+  background: var(--mat-sys-surface);
+  font: var(--mat-sys-body-medium);
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  padding: 16px;
+}

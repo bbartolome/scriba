@@ -13,13 +13,14 @@
     "packages/packs"
   ],
   "scripts": {
-    "dev": "echo \"scriba dev: no runnable app yet; the real dev script lands in phase:scaffold s4\"",
+    "dev": "mkdir -p .scratch-books && npm run build -w @bbartolome/scriba-contracts && npm run build -w @bbartolome/scriba-api && SCRIBA_BOOKS_DIR=\"$(pwd)/.scratch-books\" concurrently -k -n api-tsc,api,web,contracts-tsc \"tsc -p apps/api/tsconfig.json --watch --preserveWatchOutput\" \"node --watch apps/api/dist/main.js\" \"npm run start -w @bbartolome/scriba-web\" \"tsc -p packages/contracts/tsconfig.json --watch --preserveWatchOutput\"",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "eslint . && prettier --check ."
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "concurrently": "10.0.6",
     "eslint": "^10.14.0",
     "prettier": "^3.9.10",
     "typescript": "6.0.3",
