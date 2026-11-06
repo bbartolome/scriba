@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "view": "recipe",
+  "name": "Chapter opening",
+  "nodes": [
+    {
+      "id": "notes",
+      "kind": "input",
+      "position": { "x": 0, "y": 0 },
+      "params": { "type": "text", "label": "Chapter notes" }
+    },
+    {
+      "id": "people",
+      "kind": "input",
+      "position": { "x": 0, "y": 160 },
+      "params": { "type": "entity", "label": "Key people and claims", "entityKind": "person" }
+    },
+    {
+      "id": "style",
+      "kind": "input",
+      "position": { "x": 0, "y": 320 },
+      "params": { "type": "style", "label": "Style profile" }
+    },
+    {
+      "id": "question",
+      "kind": "tool",
+      "position": { "x": 260, "y": 0 },
+      "tool": "mystery_question",
+      "params": { "tone": "dry" }
+    },
+    {
+      "id": "opening",
+      "kind": "tool",
+      "position": { "x": 520, "y": 160 },
+      "tool": "cold_open",
+      "params": { "length": "short", "example": "ada-lovelace" }
+    },
+    {
+      "id": "draft",
+      "kind": "output",
+      "position": { "x": 780, "y": 160 },
+      "params": { "label": "Chapter opening", "path": "drafts/chapter-opening.md" }
+    }
+  ],
+  "edges": [
+    { "id": "w-notes", "from": "notes.out", "to": "question.source" },
+    { "id": "w-people", "from": "people.out", "to": "question.people" },
+    { "id": "w-question", "from": "question.output", "to": "opening.question" },
+    { "id": "w-style", "from": "style.out", "to": "opening.style" },
+    { "id": "w-draft", "from": "opening.output", "to": "draft.in" }
+  ]
+}
