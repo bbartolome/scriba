@@ -29,6 +29,16 @@ describe('auto model resolution and its cache', () => {
     library = await createTempLibrary();
     running = await startProvidersApp(library.booksDir);
     client = running.app.get<ProviderClient>(PROVIDER_CLIENT);
+    // Resolution for a project reads that project's override through the Project store, which needs
+    // an active project (phase:project-override). The project these tests name is created and activated.
+    const created = await api(running, 'POST', '/api/project-store/projects/new', {
+      folderName: 'nonfiction',
+      title: 'Nonfiction',
+    });
+    expect(created.status).toBe(201);
+    expect(
+      (await api(running, 'POST', '/api/project-store/projects/nonfiction/activate', {})).status,
+    ).toBe(200);
     mock = await startTestMock([
       scenario('auto-two', [step([content('ok')])], ['beta', 'alpha']),
       scenario('auto-cache', [step([content('ok')])], ['gamma', 'delta']),

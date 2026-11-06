@@ -6,6 +6,8 @@ import { providersBoot } from './registry/boot.js';
 import { PROVIDERS_SECTION_NAME } from './registry/providers-section.js';
 import { AutoModelCache } from './registry/auto-model-cache.js';
 import { ProvidersRegistry } from './registry/providers-registry.js';
+import { ProjectModelService } from './project-override/project-model.service.js';
+import { ProjectOverrideStore } from './project-override/project-override-store.js';
 import { ModelResolver } from './resolution.js';
 import { ProvidersController } from './providers.controller.js';
 
@@ -17,15 +19,18 @@ registerBootStep(providersBoot);
 /**
  * The Model providers module (survey 19 §2). It binds the client under `PROVIDER_CLIENT` for
  * in-process consumers, serves `/api/providers`, and keeps the `providers` section and the secrets
- * file. The client is the only provider of `PROVIDER_CLIENT`, and it is exported.
+ * file. The client is the only provider of `PROVIDER_CLIENT`, and it is exported. The project
+ * override is read and written through the Project store's provider, which the app graph supplies.
  */
 @Module({
   controllers: [ProvidersController],
   providers: [
     AutoModelCache,
     ProvidersRegistry,
+    ProjectOverrideStore,
     ModelResolver,
     ProviderClientService,
+    ProjectModelService,
     { provide: PROVIDER_CLIENT, useExisting: ProviderClientService },
   ],
   exports: [PROVIDER_CLIENT],
