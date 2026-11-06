@@ -8,3 +8,7 @@ export * from './vocabulary.js';
 export * from './common.js';
 export * from './order.js';
 export * from './view.js';
+export * from './preflight.js';
+export * from './export.js';
+export * from './settings.js';
+export * from './project-yaml.js';
