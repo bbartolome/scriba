@@ -7,6 +7,7 @@ import type { LoadedTool } from './tool-source.js';
  * The offering rule (spec, "Pack layout and loading"): a tool is offered to a project when it is
  * enabled and valid, and it comes from `core`, from the project's genre pack or from the user pack.
  */
+// provisional: survey 21 §7 item 6
 export function offeredTools(
   tools: readonly LoadedTool[],
   project: ActiveProject,

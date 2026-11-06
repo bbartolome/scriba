@@ -5,6 +5,7 @@ import type { GenrePackName } from '@bbartolome/scriba-contracts/tool-registry';
  * and its genre pack, for the offering rule. The real reader comes from the Project store's file
  * API (#20 phase:files). Until then the tests bind a fixed project.
  */
+// provisional: survey 21 §7 item 6
 export interface ActiveProject {
   readonly id: string;
   /** The built-in genre pack `project.yaml` names, or undefined when it names none. */

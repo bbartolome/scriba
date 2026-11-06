@@ -8,6 +8,7 @@ import type { ToolSpec, ValidationIssue } from '@bbartolome/scriba-contracts/too
  * unknown keywords, and `additionalProperties` is always false at the root.
  */
 
+// provisional: survey 21 §7 item 1
 const ajv = new Ajv({ allErrors: true, useDefaults: true, strict: true, coerceTypes: false });
 
 /** One compiled validator per spec object. A reloaded spec is a new object, so it compiles again. */

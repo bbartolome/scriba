@@ -70,7 +70,9 @@ export class ToolExecutorService {
   /**
    * Renders, calls the model with one system message for the output kind and the prompt as the
    * user message, and returns `{output, sourcesUsed}`. A provider failure is `TOOL_MODEL_ERROR`.
+   * The request is plain completion and sends no `tools`.
    */
+  // provisional: survey 21 §7 item 5
   async execute(
     name: string,
     input: ToolCallInput,
@@ -115,6 +117,9 @@ export class ToolExecutorService {
     // Step 2: the arguments pass the schema, with defaults applied.
     const args = validateArgumentsOrRefuse(name, spec, input.arguments);
     const fields = inputFieldsOf(spec);
+    // A style field the caller left empty renders nothing here. The caller fills the project's
+    // style-profile ref before it resolves the entities (survey 21 §7 item 7).
+    // provisional: survey 21 §7 item 7
 
     // Step 3: every entity the arguments name is resolved, and its kind is one the field takes.
     const entities = firstById(input.entities);
@@ -156,6 +161,8 @@ export class ToolExecutorService {
     }
 
     // Step 4: the template renders from the validated arguments and the resolved entities only.
+    // `{{toolCatalog}}` lists the enabled tools offered to the project only (survey 21 §7 item 11).
+    // provisional: survey 21 §7 item 11
     const project = await this.projects.current();
     const catalog: ToolCatalogEntry[] = catalogEntriesOf(
       offeredTools(await this.tools.list(), project),
@@ -259,7 +266,9 @@ function referencesOf(fields: readonly InputField[], args: Record<string, unknow
 /**
  * `sourcesUsed` (spec): the resolved references for the entity-typed fields, de-duplicated in
  * property order. A style profile is left out, because it shapes voice and not evidence.
+ * Each item is `{id, type, path}` (survey 21 §7 item 12).
  */
+// provisional: survey 21 §7 item 12
 function sourcesOf(
   references: readonly Reference[],
   entities: ReadonlyMap<string, ResolvedToolEntity>,

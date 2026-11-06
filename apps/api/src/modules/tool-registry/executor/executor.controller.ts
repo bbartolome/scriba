@@ -14,6 +14,7 @@ import { ToolExecutorService } from './executor.service.js';
  * The render and execute routes (spec, "Registry HTTP API"). Both are POSTs that write no files.
  * They sit behind Setup & auth's global guard, which covers them without a change here.
  */
+// provisional: survey 21 §7 item 16
 @Controller(TOOL_REGISTRY_ROUTE_PREFIX.replace(/^\//, ''))
 export class ToolExecutorController {
   constructor(private readonly executor: ToolExecutorService) {}
