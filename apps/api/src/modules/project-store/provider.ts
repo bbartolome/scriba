@@ -9,6 +9,7 @@ import type {
   ResolvedEntity,
 } from '@bbartolome/scriba-contracts/project-store';
 import { EntitiesService } from './entities.service.js';
+import { ProjectStoreEvents, type ProjectSwitchListener } from './events.js';
 import { FileApiService, type ListOptions } from './file-api.service.js';
 import { LibraryService } from './library.service.js';
 
@@ -24,6 +25,7 @@ export class ProjectStoreProvider {
     private readonly library: LibraryService,
     private readonly files: FileApiService,
     private readonly entities: EntitiesService,
+    private readonly events: ProjectStoreEvents,
   ) {}
 
   /** The active project's id, or undefined when none is active. */
@@ -54,5 +56,24 @@ export class ProjectStoreProvider {
 
   async listEntities(projectId: string, type?: string): Promise<EntityListItem[]> {
     return this.entities.list(await this.library.requireActive(projectId), type);
+  }
+
+  /**
+   * Appends text to a file under `logs/` (survey 23 §1). It names the project, not the active one,
+   * so a run can finish its transcript after the author has switched projects. The path guard still
+   * applies, and only `logs/` paths are accepted.
+   */
+  async appendLog(projectId: string, path: string, text: string): Promise<void> {
+    return this.files.appendLog(await this.library.locate(projectId), path, text);
+  }
+
+  /** Reads a file under `logs/`, or undefined when it does not exist. Named by project, as appendLog. */
+  async readLog(projectId: string, path: string): Promise<string | undefined> {
+    return this.files.readLog(await this.library.locate(projectId), path);
+  }
+
+  /** Subscribes to `project.switched` in-process. Returns the function that removes the listener. */
+  onProjectSwitched(listener: ProjectSwitchListener): () => void {
+    return this.events.onProjectSwitched(listener);
   }
 }
