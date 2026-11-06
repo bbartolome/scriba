@@ -145,6 +145,7 @@ export async function useScenario(
   running: RunningAgentApp,
   mock: TestMock,
   scenarioName: string,
+  context: { readonly contextSize?: number; readonly maxTokens?: number } = {},
 ): Promise<void> {
   await writeSection(running.library.booksDir, 'providers', {
     appDefault: { providerId: 'mock', model: 'mock-model' },
@@ -155,8 +156,8 @@ export async function useScenario(
         baseURL: mock.base(scenarioName),
         model: 'mock-model',
         temperature: 0.7,
-        contextSize: 64000,
-        maxTokens: 4096,
+        contextSize: context.contextSize ?? 64000,
+        maxTokens: context.maxTokens ?? 4096,
         timeout: 5000,
         retries: 0,
       },

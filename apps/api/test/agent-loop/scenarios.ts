@@ -42,6 +42,14 @@ const SCRIPTS: Readonly<Record<string, () => Scenario>> = {
       step([content('I could not read the outline.')], { turn: 3 }),
     ]),
 
+  // Reads a big file, then a long one, then answers: the context budget and the read cut both apply.
+  budget: () =>
+    scenario('budget', [
+      step([toolCall('call_big', 'read_file', ['{"path": "sources/big.md"}'])], { turn: 0 }),
+      step([toolCall('call_huge', 'read_file', ['{"path": "sources/huge.md"}'])], { turn: 1 }),
+      step([content('Both files read.')], { turn: 2 }),
+    ]),
+
   // A read outside the project, then a text answer once the refusal is in.
   'outside-project': () =>
     scenario('outside-project', [
