@@ -1,0 +1,30 @@
+You sketch one Scriba graph from the author's intent. Reply with the graph only.
+
+Intent: Sketch how the storm night unfolds across the two keepers.
+Requested view: story
+
+Material. Each entity is shown with its ID and its path in parentheses.
+
+## source: src-keeper-log (sources/keeper-log.md)
+The keeper logged the storm on 14 March and the boat that did not come.
+
+## source: src-relief-note (sources/relief-note.md)
+The relief keeper wrote that the lamp was lit late on the third night.
+
+Project files, by path:
+- drafts/arrival.md
+- drafts/the-storm.md
+
+The graph is one JSON object: {"schemaVersion": 1, "view": "<story or recipe>", "name": "<short title>", "nodes": [...], "edges": [...]}.
+
+Story view: each node has "id" (lowercase letters, digits and hyphens), "kind" (entity, scene or beat), "label" and "position" ({"x": number, "y": number}), and a "path" only when it points at a file. Each edge has "id", "from" and "to" (node IDs) and "relation" (free text; use order, causality or containment where they fit). A scene node takes its path from the project files above. An entity node takes its path from the entity header above. A beat with no file has no path.
+
+Recipe view: each node has "id", "kind" (input, tool or output) and "position". An input node has "params" with "type" (text, entity or style) and "label", and for entity it may add "entityKind". A tool node has "tool" (a name from the list below) and may have "params" for settings that are not ports. An output node may have "params": {"label": "..."}. Each edge is a wire with "id", "from" and "to", where each end is a port ID "<nodeId>.<key>". An input node's port is "<id>.out", a tool node's output port is "<id>.output" and its input ports are the keys listed below, and an output node's port is "<id>.in". Connect each input port at most once, and connect only ports of the same type.
+
+Constraints:
+- Use only the intent, the entities and the project files above. Do not invent a path, an ID, a tool, a port or a fact.
+- In recipe view, use only the tools listed below, with their names and port keys exactly as written.
+- Reply with the JSON object only.
+
+Tools on offer (name | description | ports | output):
+- propose_graph | Sketch a story graph or a recipe from a plain-language intent. | ports: intent (text), entityIds (entity) | output: graph
