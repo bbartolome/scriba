@@ -35,7 +35,7 @@ inputs:
 output: draft
 enabled: true
 prompt: |-
-  Write a short profile of the main person below.
+  {{!-- The comment is dropped; the rendered prompt does not change. --}}Write a short profile of the main person below.
   {{entity person}}
   {{#if tone}}Keep the tone {{tone}}.{{else}}Keep the tone plain.{{/if}}
   Notes: [{{notes}}]
