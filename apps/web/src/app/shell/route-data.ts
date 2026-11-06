@@ -58,6 +58,14 @@ export const HEALTHZ_PATH = '/healthz';
 /** Platform's version route. Its guard (#18) makes a 401 mean no credential. */
 export const VERSION_PATH = '/api/platform/version';
 
+/**
+ * Setup & auth's setup-status and preferences routes. The Shell reads only the completion flag and
+ * the theme from them, through these paths and its own small schemas, and imports nothing from the
+ * setup-auth feature (survey 18 §4, §7 item 14).
+ */
+export const SETUP_STATUS_PATH = '/api/setup-auth/setup-status';
+export const PREFERENCES_PATH = '/api/setup-auth/preferences';
+
 export function isDeviceClass(value: unknown): value is DeviceClass {
   return value === 'phone' || value === 'tablet' || value === 'desktop';
 }

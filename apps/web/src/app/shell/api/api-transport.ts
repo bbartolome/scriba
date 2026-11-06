@@ -2,7 +2,8 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { type Observable, catchError, map, of, throwError } from 'rxjs';
 
-export type HttpMethod = 'GET' | 'POST';
+/** GET reads, POST commands, and PATCH a field-level merge (the setup-auth contract's writes). */
+export type HttpMethod = 'GET' | 'POST' | 'PATCH';
 
 /** One HTTP answer. `status` is 0 when no answer came back. `body` is parsed JSON, or undefined. */
 export interface TransportResponse {

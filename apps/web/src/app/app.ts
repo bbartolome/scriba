@@ -63,10 +63,11 @@ export class App {
   protected readonly themeIconPath = computed(() => THEME_ICON_PATHS[this.theme.choice()]);
   protected readonly themeLabel = computed(
     () =>
-      `Theme: ${THEME_NAMES[this.theme.choice()]}. Switch to ${THEME_NAMES[this.theme.nextChoice()]}.`,
+      `Theme: ${this.themeName(this.theme.choice())}. Switch to ${this.themeName(this.theme.nextChoice())}.`,
   );
 
   constructor() {
+    this.theme.loadAppDefault();
     this.stream.start();
     effect(() => {
       if (this.openView.tooSmall()) {
@@ -80,5 +81,14 @@ export class App {
         this.notices.clear(LARGER_SCREEN_NOTICE);
       }
     });
+  }
+
+  /** The toggle's name for a choice. With no override, `device` shows the app default when there is one. */
+  private themeName(choice: ThemeChoice): string {
+    const appDefault = this.theme.appDefault();
+    if (choice === 'device' && appDefault !== 'system') {
+      return `app default (${appDefault})`;
+    }
+    return THEME_NAMES[choice];
   }
 }

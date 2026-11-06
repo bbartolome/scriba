@@ -1,11 +1,22 @@
-import { Injectable, type Signal, computed, signal } from '@angular/core';
+import { Injectable, type Signal, computed, inject, signal } from '@angular/core';
+import { z } from 'zod';
+import { ApiClient } from '../api/api-client';
+import { PREFERENCES_PATH } from '../route-data';
 
 /**
- * `device` follows the OS setting (the default). `light` and `dark` are the device's own override.
- * Devices are access points, not identities (#2), so the override is device-local and is never
- * sent to the server. The #18 app default (owner item O4) is not read here.
+ * `device` follows the OS setting. `light` and `dark` are this browser's own override, kept in local
+ * storage and never sent to the server. Devices are access points, not identities (#2).
  */
 export type ThemeChoice = 'device' | 'light' | 'dark';
+
+/**
+ * The app-wide default, from the author's preferences in `settings.yaml` (survey 18 §7 item 14,
+ * provisional). `system` follows the OS, as `device` does.
+ */
+export type AppThemeDefault = 'system' | 'light' | 'dark';
+
+/** The one preference the Shell reads: the theme. The rest of the preferences belong to setup-auth. */
+const AppThemeSchema = z.object({ theme: z.enum(['system', 'light', 'dark']) });
 
 const STORAGE_KEY = 'scriba.theme';
 
@@ -32,7 +43,18 @@ function writeStored(choice: ThemeChoice): void {
 }
 
 /**
- * Applies the override as the `color-scheme` of the root element. The Material theme reads
+ * What applies: this browser's override first, then the app default when it is light or dark, then
+ * the OS. `device` in the result means the OS decides.
+ */
+function effectiveChoice(override: ThemeChoice, appDefault: AppThemeDefault): ThemeChoice {
+  if (override !== 'device') {
+    return override;
+  }
+  return appDefault === 'system' ? 'device' : appDefault;
+}
+
+/**
+ * Applies the effective theme as the `color-scheme` of the root element. The Material theme reads
  * `light-dark()` from that property. With no override the stylesheet's `light dark` follows the OS.
  */
 function apply(choice: ThemeChoice): void {
@@ -41,12 +63,19 @@ function apply(choice: ThemeChoice): void {
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  private readonly state = signal<ThemeChoice>(readStored());
-  readonly choice: Signal<ThemeChoice> = this.state.asReadonly();
+  private readonly api = inject(ApiClient);
+  private readonly override = signal<ThemeChoice>(readStored());
+  private readonly defaultTheme = signal<AppThemeDefault>('system');
+
+  /** This browser's override, as the toggle shows it. */
+  readonly choice: Signal<ThemeChoice> = this.override.asReadonly();
+
+  /** The app default from the author's preferences. `system` until they choose a theme. */
+  readonly appDefault: Signal<AppThemeDefault> = this.defaultTheme.asReadonly();
 
   /** The choice the toggle moves to next. The toggle's accessible name says it. */
   readonly nextChoice = computed<ThemeChoice>(() => {
-    const current = this.state();
+    const current = this.override();
     if (current === 'device') {
       return 'light';
     }
@@ -54,13 +83,27 @@ export class ThemeService {
   });
 
   constructor() {
-    apply(this.state());
+    apply(effectiveChoice(this.override(), this.defaultTheme()));
+  }
+
+  /** Reads the app default once. A failed read keeps the OS default, and the call is not retried. */
+  loadAppDefault(): void {
+    this.api.get(PREFERENCES_PATH, AppThemeSchema).subscribe({
+      next: (preferences) => this.setAppDefault(preferences.theme),
+      error: () => undefined,
+    });
+  }
+
+  /** Sets the app default and applies it, unless this browser has its own override. */
+  setAppDefault(theme: AppThemeDefault): void {
+    this.defaultTheme.set(theme);
+    apply(effectiveChoice(this.override(), theme));
   }
 
   set(choice: ThemeChoice): void {
-    this.state.set(choice);
+    this.override.set(choice);
     writeStored(choice);
-    apply(choice);
+    apply(effectiveChoice(choice, this.defaultTheme()));
   }
 
   /** Moves to the next choice: device, then light, then dark, then device. */
