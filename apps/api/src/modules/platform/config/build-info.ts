@@ -24,7 +24,7 @@ const SHA_PATTERN = /^[0-9a-f]{7,40}$/;
  * The version is the apps/api package version. The package is kept at `0.0.0-dev`, so a build
  * that has not been stamped reports the dev version.
  */
-function readPackageVersion(): string {
+export function readPackageVersion(): string {
   try {
     const text = readFileSync(join(API_ROOT, 'package.json'), 'utf8');
     const parsed = SemverSchema.safeParse((JSON.parse(text) as { version?: unknown }).version);
