@@ -180,6 +180,7 @@ export class LibraryService {
     if (await exists(dir)) {
       throw projectError('PROJECT_EXISTS', 'A folder with that name already exists.');
     }
+    // provisional: survey 20 §7 item 9 (no pack in the request: the Setup & auth preference, else nonfiction)
     // provisional: survey 20 §7 item 24 (the pack name is free text; the Tool registry warns on unknown names)
     const genrePack = request.genrePack ?? (await this.defaultGenrePack());
 
