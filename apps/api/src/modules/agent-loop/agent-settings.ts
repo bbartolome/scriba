@@ -7,7 +7,7 @@ import {
 import { readSection, registerSettingsSection, writeSection } from '../platform/index.js';
 import { agentLibrary } from './library.js';
 
-// Survey 23 §7 item 6 (decided): this module registers the `agent` section. Platform owns the file.
+// provisional: survey 23 §7 item 6 (decided). This module registers the `agent` section; Platform owns the file.
 registerSettingsSection({ name: AGENT_SETTINGS_SECTION });
 
 /**

@@ -138,7 +138,9 @@ export class AgentRunService implements OnModuleInit {
     });
     this.record(live, live.nextSeq(), 'intent', { intent: request.intent });
     void this.closeActiveInterrupted();
-    void this.drive(live, model, modelFailure);
+    this.drive(live, model, modelFailure).catch((error: unknown) => {
+      this.logger.error(`An agent run could not finish cleanly: ${error instanceof Error ? error.name : 'unknown error'}`);
+    });
     return { runId, conversationId };
   }
 
@@ -203,25 +205,29 @@ export class AgentRunService implements OnModuleInit {
         message = this.readableMessage(error);
       }
     }
-    const seq = live.nextSeq();
-    this.record(live, seq, 'run-end', {
-      reason,
-      pendingChangeIds: [],
-      ...(message === undefined ? {} : { message }),
-    });
-    this.send(live, {
-      module: 'agent-loop',
-      type: 'run-ended',
-      data: {
-        runId: live.runId,
-        seq,
+    // The slot is released however the end is written, so a failed write cannot block the project.
+    try {
+      const seq = live.nextSeq();
+      this.record(live, seq, 'run-end', {
         reason,
         pendingChangeIds: [],
         ...(message === undefined ? {} : { message }),
-      },
-    });
-    await live.drain();
-    this.registry.release(live.projectId);
+      });
+      this.send(live, {
+        module: 'agent-loop',
+        type: 'run-ended',
+        data: {
+          runId: live.runId,
+          seq,
+          reason,
+          pendingChangeIds: [],
+          ...(message === undefined ? {} : { message }),
+        },
+      });
+      await live.drain();
+    } finally {
+      this.registry.release(live.projectId);
+    }
   }
 
   /** The step loop (spec, "Step" and "Step cap"). Returns the reason the run ended, or throws. */
