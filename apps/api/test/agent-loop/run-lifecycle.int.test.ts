@@ -76,7 +76,8 @@ describe('agent run: a text-only turn', () => {
       }
     }
 
-    // The model received the fixed prompt, the intent, and the two read tools, nothing else.
+    // The model received the fixed prompt, the intent, and the offered tools: the three project tools
+    // and the enabled registry tools. The narrative tools are checked in narrative.int.test.ts.
     const requests = await mock.chatRequests('text-only');
     expect(requests).toHaveLength(1);
     const body = requests[0]?.body as {
@@ -88,7 +89,9 @@ describe('agent run: a text-only turn', () => {
       role: 'user',
       content: 'Say hello',
     });
-    expect(body.tools.map((tool) => tool.function.name)).toEqual(['list_files', 'read_file']);
+    expect(body.tools.map((tool) => tool.function.name)).toEqual(
+      expect.arrayContaining(['list_files', 'read_file', 'search_notes']),
+    );
 
     // The current run state is the finished run, with the reply's text.
     const state = await call(running, 'GET', agentPath('book-text', '/current-run-state'));

@@ -1,10 +1,15 @@
 import { Ajv, type ErrorObject, type ValidateFunction } from 'ajv';
-import { type ToolFamily } from '@bbartolome/scriba-contracts/agent-loop';
+import {
+  type DraftProvenance,
+  type SourceUsed,
+  type ToolFamily,
+} from '@bbartolome/scriba-contracts/agent-loop';
+import { SEARCH_LIMIT_MAX, SEARCH_SCOPES } from '@bbartolome/scriba-contracts/project-store';
 import { ApiException } from '../../platform/index.js';
 import type { ProjectStoreProvider } from '../../project-store/index.js';
 
 /**
- * The built-in project tools of this phase (spec, "Tool families": `list_files` and `read_file`).
+ * The built-in project tools (spec, "Tool families"): `list_files`, `read_file` and `search_notes`.
  * Each has a JSON Schema for its arguments, checked with Ajv, and an executor that goes through the
  * Project store's in-process provider, so the store's path guard decides what may be read.
  */
@@ -26,6 +31,10 @@ export interface ToolOutcome {
   readonly modelText: string;
   /** Set when the output was cut: the length before the cut. */
   readonly originalLength?: number;
+  /** The entity references a narrative tool drew from. Project tools have none. */
+  readonly sourcesUsed?: SourceUsed[];
+  /** The draft provenance of a narrative tool's output (survey 23 §3, P3). */
+  readonly provenance?: DraftProvenance;
 }
 
 export type ArgumentCheck =
@@ -34,7 +43,7 @@ export type ArgumentCheck =
 type JsonSchema = Record<string, unknown>;
 
 export interface BuiltinTool {
-  readonly name: 'list_files' | 'read_file';
+  readonly name: 'list_files' | 'read_file' | 'search_notes';
   readonly family: ToolFamily;
   readonly description: string;
   readonly parameters: JsonSchema;
@@ -70,10 +79,30 @@ const READ_FILE_SCHEMA: JsonSchema = {
   additionalProperties: false,
 };
 
+const SEARCH_NOTES_SCHEMA: JsonSchema = {
+  type: 'object',
+  properties: {
+    query: {
+      type: 'string',
+      minLength: 1,
+      description: 'The words to look for, in plain text.',
+    },
+    limit: {
+      type: 'integer',
+      minimum: 1,
+      maximum: SEARCH_LIMIT_MAX,
+      description: 'How many passages to return, best match first. Ten when omitted.',
+    },
+  },
+  required: ['query'],
+  additionalProperties: false,
+};
+
 // Ajv compiles each schema once. Strict mode, so an unknown keyword is a bug caught at load.
 const ajv = new Ajv({ allErrors: true, strict: true });
 const LIST_FILES_CHECK = ajv.compile(LIST_FILES_SCHEMA);
 const READ_FILE_CHECK = ajv.compile(READ_FILE_SCHEMA);
+const SEARCH_NOTES_CHECK = ajv.compile(SEARCH_NOTES_SCHEMA);
 
 /** The argument text of one call, as a name a reader would say: `path`, or the root for `""`. */
 function labelOf(pointer: string): string {
@@ -104,7 +133,7 @@ function issueLine(error: ErrorObject): string {
 }
 
 /** The fields a tool takes, for the expected-arguments line the model sees after a rejection. */
-function expectedLine(schema: JsonSchema): string {
+export function expectedLine(schema: JsonSchema): string {
   const properties = (schema['properties'] ?? {}) as Record<string, { type?: string }>;
   const required = Array.isArray(schema['required']) ? (schema['required'] as string[]) : [];
   const fields = Object.entries(properties).map(
@@ -135,7 +164,7 @@ function textArg(args: Record<string, unknown>, key: string): string {
   return typeof value === 'string' ? value : '';
 }
 
-function plural(count: number, one: string, many: string): string {
+export function plural(count: number, one: string, many: string): string {
   return `${count} ${count === 1 ? one : many}`;
 }
 
@@ -197,12 +226,48 @@ const READ_FILE: BuiltinTool = {
   execute: readFile,
 };
 
-/** The built-in tools of this phase, in the order the model is offered them. */
-export const BUILTIN_TOOLS: readonly BuiltinTool[] = [LIST_FILES, READ_FILE];
-
-export function builtinToolNamed(name: string): BuiltinTool | undefined {
-  return BUILTIN_TOOLS.find((tool) => tool.name === name);
+/**
+ * Keyword search over the project's `sources/` and `entities/` (survey 23 §7 item 3, decided). The
+ * scope is fixed, so drafts are never searched, and the description says so.
+ */
+async function searchNotes(ctx: ToolContext, args: Record<string, unknown>): Promise<ToolOutcome> {
+  const query = textArg(args, 'query');
+  const limit = args['limit'];
+  const passages = await ctx.store.search(ctx.projectId, {
+    query,
+    scope: [...SEARCH_SCOPES],
+    ...(typeof limit === 'number' ? { limit } : {}),
+  });
+  const shown = passages.map((passage) => ({
+    path: passage.path,
+    offset: passage.offset,
+    snippet: passage.snippet,
+    score: passage.score,
+  }));
+  return {
+    summary: `Found ${plural(shown.length, 'passage', 'passages')} for "${query}".`,
+    output: { query, passages: shown },
+    modelText:
+      shown.length === 0
+        ? 'No passages match.'
+        : shown
+            .map((passage) => `${passage.path} (offset ${passage.offset}): ${passage.snippet}`)
+            .join('\n'),
+  };
 }
+
+const SEARCH_NOTES: BuiltinTool = {
+  name: 'search_notes',
+  family: 'project',
+  description:
+    'Search the sources and entities of the active project for the words given, and return the best matching passages with their file paths. Drafts are not searched.',
+  parameters: SEARCH_NOTES_SCHEMA,
+  check: checkWith('search_notes', SEARCH_NOTES_SCHEMA, SEARCH_NOTES_CHECK),
+  execute: searchNotes,
+};
+
+/** The built-in tools of this phase, in the order the model is offered them. */
+export const BUILTIN_TOOLS: readonly BuiltinTool[] = [LIST_FILES, READ_FILE, SEARCH_NOTES];
 
 /** The raw argument text of one call, parsed. An empty text is no arguments. */
 export type ParsedArguments =

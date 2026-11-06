@@ -274,11 +274,11 @@ describe('phase file-tools-chat: acceptance (survey 23 §3)', () => {
 
       // Before the withdrawal the model still had read_file; after it, the tool is gone from the request.
       const bodies = await chatBodies(mock, 'three-invalid');
-      expect(bodies[0]?.tools?.map((tool) => tool.function.name)).toEqual([
-        'list_files',
-        'read_file',
-      ]);
-      expect(bodies[3]?.tools?.map((tool) => tool.function.name)).toEqual(['list_files']);
+      const offeredBefore = bodies[0]?.tools?.map((tool) => tool.function.name) ?? [];
+      expect(offeredBefore).toEqual(expect.arrayContaining(['list_files', 'read_file']));
+      const offeredAfter = bodies[3]?.tools?.map((tool) => tool.function.name) ?? [];
+      expect(offeredAfter).toContain('list_files');
+      expect(offeredAfter).not.toContain('read_file');
     });
   });
 
