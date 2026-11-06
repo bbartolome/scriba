@@ -1,0 +1,17 @@
+schemaVersion: 1
+name: shared_name
+description: A tool that nonfiction also declares, so the name is taken twice.
+inputs:
+  type: object
+  properties:
+    topic:
+      type: string
+      title: Topic
+      x-scriba-type: text
+      x-scriba-port: true
+  required: [topic]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |
+  Write about {{topic}}.

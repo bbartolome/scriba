@@ -1,0 +1,18 @@
+schemaVersion: 1
+name: propose_graph
+description: Propose a recipe graph from a goal, using the tools on offer.
+inputs:
+  type: object
+  properties:
+    goal:
+      type: string
+      title: Goal
+      x-scriba-type: text
+      x-scriba-port: true
+  required: [goal]
+  additionalProperties: false
+output: graph
+enabled: true
+prompt: |
+  Recipe goal: {{goal}}
+  {{toolCatalog}}

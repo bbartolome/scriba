@@ -1,0 +1,11 @@
+schemaVersion: 1
+kind: person
+title: Person
+description: A person in the project, one file per person.
+fields:
+  type: object
+  properties:
+    name:
+      type: string
+      title: Name
+  required: [name]
