@@ -14,8 +14,8 @@ export type SearchScope = z.infer<typeof SearchScopeSchema>;
 
 /**
  * Result limit. The default is 10 when `limit` is absent, and the maximum is 50.
- * provisional: survey 20 §7 item 21
  */
+// provisional: survey 20 §7 item 21
 export const SEARCH_LIMIT_DEFAULT = 10;
 export const SEARCH_LIMIT_MAX = 50;
 

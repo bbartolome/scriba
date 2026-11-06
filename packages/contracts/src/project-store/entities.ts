@@ -16,10 +16,11 @@ export type EntityReference = z.infer<typeof EntityReferenceSchema>;
  * keys pass through (looseObject). The Tool registry validates the pack schemas, and the Project
  * store reads only this base.
  *
- * provisional: survey 20 §7 item 27 (`id` is optional: a file with no id resolves by its file stem)
- * provisional: survey 20 §7 item 14 (sources/ front matter is optional; a file without it defaults
- * to `type: source`. That default is applied where the file is read, not in this schema)
+ * `id` is optional: a file with no id resolves by its file stem. A file with no front matter
+ * defaults to `type: source` where it is read, not in this schema.
  */
+// provisional: survey 20 §7 item 27
+// provisional: survey 20 §7 item 14
 export const EntityFrontMatterBaseSchema = z.looseObject({
   id: EntityReferenceSchema.optional(),
   type: z.string().min(1),
@@ -31,16 +32,16 @@ export type EntityFrontMatterBase = z.infer<typeof EntityFrontMatterBaseSchema>;
  * Prose citation form `[@id]` (Pandoc-style). The pattern captures the ID. Use it with
  * `String.prototype.matchAll`, which copies the expression, so the shared `lastIndex` stays unused.
  * [proposed] The ID character set is the survey's choice. Front-matter `links` carry entity links.
- * provisional: survey 20 §7 item 16
  */
+// provisional: survey 20 §7 item 16
 export const PROSE_ENTITY_CITATION_PATTERN = /\[@([A-Za-z0-9_][A-Za-z0-9_.:-]*)\]/g;
 
 /**
  * Parser for prose citations, published as a Zod transform so this slice holds schemas and
  * constants only. `ProseEntityCitationsSchema.parse(text)` returns the cited IDs in order of
  * appearance, with duplicates kept. Resolution uses it.
- * provisional: survey 20 §7 item 16
  */
+// provisional: survey 20 §7 item 16
 export const ProseEntityCitationsSchema = z
   .string()
   .transform((text) =>

@@ -10,8 +10,8 @@ import { EntityReferenceSchema } from './entities.js';
 /**
  * Per-project model override. The shape is defined here, not imported from Model providers, to
  * avoid a contract-phase cycle. Model providers asserts that it is compatible with its ModelChoice.
- * provisional: survey 20 §7 item 6
  */
+// provisional: survey 20 §7 item 6
 export const ProjectModelChoiceSchema = z.looseObject({
   providerId: z.string().min(1),
   model: z.string().min(1),
@@ -25,8 +25,8 @@ export const ProjectYamlSchema = z.looseObject({
   /**
    * A pack name: `nonfiction`, `fiction` or a user pack. The schema keeps a free string, so an
    * unknown name is accepted here. The Tool registry warns about it.
-   * provisional: survey 20 §7 item 24
    */
+  // provisional: survey 20 §7 item 24
   genrePack: z.string().min(1),
   /** Optional entity reference (spec). */
   styleProfile: EntityReferenceSchema.optional(),

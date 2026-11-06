@@ -7,10 +7,10 @@ import { PendingConflictSchema, PendingIdSchema } from './pending.js';
  * of Platform's envelope `{module, type, data}`. Wire names are kebab-case, because Platform
  * requires kebab-case `type` values (survey item 13). Project-scoped events carry `projectId` in
  * `data`.
- * provisional: survey 20 §7 item 13
  */
 
 /** Wire names of the five members. */
+// provisional: survey 20 §7 item 13
 export const PROJECT_STORE_EVENT_TYPES = [
   'pending-created',
   'pending-updated',

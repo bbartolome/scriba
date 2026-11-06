@@ -54,7 +54,6 @@ export type FileReadQuery = z.infer<typeof FileReadQuerySchema>;
  * for later checks. It covers the disk bytes (survey item 20).
  * - `upgraded`: set on a GET of an older file, whose content is the in-memory upgraded view. The
  *   file on disk is unchanged. [proposed] boolean form.
- *   provisional: survey 20 §7 item 20
  * - `origin`: set on an overlay read, to show whose pending text the content is. [proposed]
  */
 export const FileReadResultSchema = z.object({
@@ -62,6 +61,7 @@ export const FileReadResultSchema = z.object({
   content: z.string(),
   hash: Sha256HashSchema,
   mtime: z.iso.datetime(),
+  // provisional: survey 20 §7 item 20
   upgraded: z.boolean().optional(),
   origin: PendingOriginSchema.optional(),
 });
@@ -107,7 +107,6 @@ export type FileWriteResult = z.infer<typeof FileWriteResultSchema>;
  * request never touches disk. It creates or updates a pending change.
  * - `base` is the caller's captured base. When it is absent, the module captures disk content on
  *   the first propose. [proposed] field name.
- *   provisional: survey 20 §7 item 10 (agent writes always pass the first-read base)
  */
 export const ProposeRequestSchema = z.discriminatedUnion('op', [
   z.object({
@@ -115,6 +114,7 @@ export const ProposeRequestSchema = z.discriminatedUnion('op', [
     path: ProjectRelativePathSchema,
     content: z.string(),
     origin: PendingOriginSchema,
+    // provisional: survey 20 §7 item 10
     base: PendingCapturedBaseSchema.optional(),
   }),
   z.object({
@@ -123,6 +123,7 @@ export const ProposeRequestSchema = z.discriminatedUnion('op', [
     old: z.string().min(1),
     new: z.string(),
     origin: PendingOriginSchema,
+    // provisional: survey 20 §7 item 10
     base: PendingCapturedBaseSchema.optional(),
   }),
 ]);

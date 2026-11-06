@@ -10,8 +10,8 @@ import { z } from 'zod';
  * Project id: the folder name (spec, "Library and discovery"). Discovery ignores dot folders, so
  * an id never starts with a dot, which also rules out `.` and `..`. The rule against separators and
  * NUL is [proposed]. The id is derived from the folder name on load.
- * provisional: survey 20 §7 item 19
  */
+// provisional: survey 20 §7 item 19
 export const ProjectIdSchema = z
   .string()
   .min(1)
@@ -66,8 +66,8 @@ export type FileReference = z.infer<typeof FileReferenceSchema>;
 /**
  * Content hash used as the base for later checks: SHA-256 of the UTF-8 bytes, as lowercase hex.
  * [proposed] The encoding is the survey's choice. The hash covers the disk bytes (survey item 20).
- * provisional: survey 20 §7 item 21
  */
+// provisional: survey 20 §7 item 21
 export const Sha256HashSchema = z.string().regex(/^[0-9a-f]{64}$/, {
   message: 'must be a lowercase hex SHA-256 digest',
 });

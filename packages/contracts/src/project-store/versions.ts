@@ -5,7 +5,6 @@ import { ProjectRelativePathSchema } from './common.js';
  * Draft-version listing (spec, "Draft versions"; survey §4). Versions are written only when a
  * pending change is applied to an existing top-level file in `drafts/`. A version holds the content
  * that the apply replaced. Only the Project store reads `drafts/.versions/`.
- * provisional: survey 20 §7 item 2 (apply-only versioning, not on every save)
  */
 
 /**
@@ -36,6 +35,7 @@ export const DraftVersionListQuerySchema = z.object({
 export type DraftVersionListQuery = z.infer<typeof DraftVersionListQuerySchema>;
 
 /** Listing `{draftPath, versions}` (spec). */
+// provisional: survey 20 §7 item 2
 export const DraftVersionListingSchema = z.object({
   draftPath: TopLevelDraftPathSchema,
   versions: z.array(DraftVersionSchema),

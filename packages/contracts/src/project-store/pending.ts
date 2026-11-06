@@ -10,8 +10,8 @@ import { ProjectIdSchema, ProjectRelativePathSchema, Sha256HashSchema } from './
 /**
  * Pending change ID: sortable and time-based (spec, "Storage"). [proposed] A ULID, which is 26
  * Crockford base32 characters.
- * provisional: survey 20 §7 item 21
  */
+// provisional: survey 20 §7 item 21
 export const PendingIdSchema = z.string().regex(/^[0-9A-HJKMNP-TV-Z]{26}$/, {
   message: 'must be a ULID',
 });
@@ -37,9 +37,10 @@ export type PendingConflictReason = z.infer<typeof PendingConflictReasonSchema>;
 
 /**
  * Conflict flag: `null` when the change is clean, or the reason and when it was detected.
- * provisional: survey 20 §7 item 4 (the flag is computed on GET; it is persisted only by the watcher
- * or a POST, and `pending.updated` fires on persist)
+ * The flag is computed on GET. It is persisted only by the watcher or a POST, and
+ * `pending.updated` fires on persist.
  */
+// provisional: survey 20 §7 item 4
 export const PendingConflictSchema = z.object({
   reason: PendingConflictReasonSchema,
   detectedAt: z.iso.datetime(),
@@ -63,8 +64,8 @@ export type PendingSourceUsed = z.infer<typeof PendingSourceUsedSchema>;
 
 /**
  * Origin: the agent run (with an optional tool call) or the recipe run and its Output node.
- * provisional: survey 20 §7 item 11 (`graphId` and `sourcesUsed` on the recipe origin)
  */
+// provisional: survey 20 §7 item 11
 export const PendingOriginSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('agent-run'),
@@ -86,8 +87,8 @@ export type PendingOrigin = z.infer<typeof PendingOriginSchema>;
  * written into the draft's Markdown. The shape is the spec's `{runId, toolCallId, tool, entityIds,
  * sourcesUsed, model, at}` (#23). `toolCallId` is optional so that a recipe output can carry it too.
  * [proposed] Field types follow the Agent loop's `DraftProvenance`.
- * provisional: survey 20 §7 item 11 (optional `provenance` on the change)
  */
+// provisional: survey 20 §7 item 11
 export const PendingProvenanceSchema = z.object({
   runId: z.string().min(1),
   toolCallId: z.string().min(1).optional(),
@@ -136,8 +137,8 @@ export type PendingChangeResponse = z.infer<typeof PendingChangeResponseSchema>;
 /**
  * Accept request. The body may carry edited text from the merge view, and it then goes through the
  * same three-way check. There is no partial accept in v1.
- * provisional: survey 20 §7 item 12
  */
+// provisional: survey 20 §7 item 12
 export const AcceptPendingRequestSchema = z.object({
   content: z.string().optional(),
 });
@@ -150,8 +151,8 @@ export type RejectPendingRequest = z.infer<typeof RejectPendingRequestSchema>;
 /**
  * Refresh request: a three-way merge of base, proposed and disk. It applies only to `base-changed`.
  * `target-missing` and `target-exists` are resolved by accept-anyway or reject.
- * provisional: survey 20 §7 item 15
  */
+// provisional: survey 20 §7 item 15
 export const RefreshPendingRequestSchema = z.strictObject({});
 export type RefreshPendingRequest = z.infer<typeof RefreshPendingRequestSchema>;
 

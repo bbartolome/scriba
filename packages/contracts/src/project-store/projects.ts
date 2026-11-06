@@ -51,8 +51,8 @@ export type ProjectResponse = z.infer<typeof ProjectResponseSchema>;
  * New: a folder name and a title. The folder name is a slug, and when it is absent the module
  * derives it from the title [proposed]. `genrePack` is optional. When it is absent, the module uses
  * the Setup & auth preference if one is set, and `nonfiction` otherwise.
- * provisional: survey 20 §7 item 9
  */
+// provisional: survey 20 §7 item 9
 export const NewProjectRequestSchema = z.object({
   folderName: ProjectSlugSchema.optional(),
   title: z.string().min(1),
@@ -64,8 +64,8 @@ export type NewProjectRequest = z.infer<typeof NewProjectRequestSchema>;
  * Import: the project is named in the route (`:projectId`, the folder name), so the body is empty.
  * Import validates `project.yaml`, or creates a minimal one. It never rewrites any other file
  * (survey item 8), and it appends `.scriba/` to `.gitignore` only when that line is missing.
- * provisional: survey 20 §7 item 8
  */
+// provisional: survey 20 §7 item 8
 export const ImportProjectRequestSchema = z.strictObject({});
 export type ImportProjectRequest = z.infer<typeof ImportProjectRequestSchema>;
 
