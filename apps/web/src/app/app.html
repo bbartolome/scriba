@@ -11,7 +11,9 @@
     [attr.aria-label]="themeLabel()"
     (click)="theme.cycle()"
   >
-    <mat-icon aria-hidden="true">{{ themeIcon() }}</mat-icon>
+    <svg class="theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path [attr.d]="themeIconPath()" />
+    </svg>
   </button>
 </mat-toolbar>
 

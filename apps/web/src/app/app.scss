@@ -17,6 +17,12 @@
   font: var(--mat-sys-label-large);
 }
 
+.theme-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
 .banner {
   display: flex;
   align-items: center;
