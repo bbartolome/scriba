@@ -44,15 +44,37 @@ _Avoid_: Sink, result node
 A recipe connection that carries a value from one step's output to another step's input.
 _Avoid_: Recipe edge, link
 
+**Port**:
+A named, typed slot on a recipe step that a wire or a pinned entity fills.
+_Avoid_: Socket, handle, pin
+
+**Chip**:
+The canvas token for an entity reference that the author drops onto a port to pin a value there.
+_Avoid_: Tag, badge
+
 **Run**:
 One execution of a recipe, or of part of it, with values chosen for its input nodes.
 _Avoid_: Job, execution
+
+**Scope**:
+The steps a run covers: the whole recipe, or a target step and every step upstream of it.
+_Avoid_: Selection, subset
+
+## Project
+
+**Entity**:
+A named thing in the book, such as a character, a claim or a place, kept as one file in `entities/` and cited by its id. Its kind is an attribute of the file.
+_Avoid_: Record, object, card
 
 ## Review
 
 **Pending change**:
 A proposed edit to a project file that waits for the author to accept or reject it.
 _Avoid_: Draft change, suggestion, proposal
+
+**Captured base**:
+The content of a file as a run read it, or as a change was made against it, kept so that a later write can detect a conflict.
+_Avoid_: Snapshot, original, baseline
 
 ## Agent
 
