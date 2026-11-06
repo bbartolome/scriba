@@ -25,6 +25,7 @@
     "ngx-markdown": "^22.1.1",
     "rxjs": "7.8.2",
     "style-mod": "^4.1.4",
+    "yaml": "2.9.1",
     "zod": "4.6.7"
   },
   "devDependencies": {
