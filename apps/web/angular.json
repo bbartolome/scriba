@@ -19,7 +19,8 @@
             "tsConfig": "tsconfig.app.json",
             "outputPath": "dist/web",
             "inlineStyleLanguage": "scss",
-            "styles": ["src/styles.scss"]
+            "styles": ["src/styles.scss"],
+            "externalDependencies": ["marked-katex-extension"]
           },
           "configurations": {
             "production": {
