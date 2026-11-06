@@ -119,7 +119,7 @@ describe('phase file-tools-chat: acceptance (survey 23 §3)', () => {
       mock = await startMock(['endless']);
       await sampleProject(running, 'book-cap3');
       await useScenario(running, mock, 'endless');
-      const saved = await call(running, 'PUT', '/api/agent-loop/settings', {
+      const saved = await call(running, 'POST', '/api/agent-loop/settings', {
         stepCap: 3,
         research: { enabled: false },
         search: { endpoint: null },

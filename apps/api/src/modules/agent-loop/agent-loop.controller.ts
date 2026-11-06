@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
 import {
   AGENT_CONVERSATION_ROUTE,
   AGENT_CONVERSATIONS_ROUTE,
@@ -84,7 +84,8 @@ export class AgentLoopController {
     return readAgentSettings();
   }
 
-  @Put(AGENT_SETTINGS_ROUTE)
+  @Post(AGENT_SETTINGS_ROUTE)
+  @HttpCode(200)
   async saveSettings(
     @Body(new ZodValidationPipe(AgentSettingsSchema)) settings: AgentSettings,
   ): Promise<AgentSettings> {

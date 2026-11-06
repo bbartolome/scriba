@@ -89,7 +89,7 @@ export interface Answer {
 /** One request, signed in the way a browser is. Mutations carry the app's Origin. */
 export async function call(
   running: RunningAgentApp,
-  method: 'GET' | 'POST' | 'PUT',
+  method: 'GET' | 'POST',
   path: string,
   body?: unknown,
 ): Promise<Answer> {
