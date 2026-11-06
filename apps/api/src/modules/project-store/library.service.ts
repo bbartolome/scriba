@@ -21,6 +21,7 @@ import {
 } from './project-yaml.document.js';
 import { FileLocks } from './locks.js';
 import { ProjectStoreEvents } from './events.js';
+import { SearchService } from './search/search.service.js';
 import { writeAtomically, sweepTempFiles } from './atomic-write.js';
 import {
   guardProjectPath,
@@ -119,6 +120,7 @@ export class LibraryService {
     private readonly active: ActiveProjectStore,
     private readonly events: ProjectStoreEvents,
     private readonly locks: FileLocks,
+    private readonly search: SearchService,
   ) {}
 
   /** Every immediate, non-dot subfolder of the library, with its status. Never recurses. */
@@ -318,6 +320,9 @@ export class LibraryService {
     // provisional: survey 20 §7 item 1 (activation is where a project's migrations run; none exist before phase:migrations)
     // provisional: survey 20 §7 item 17 (leftover temp files in drafts/ are swept on activation)
     await this.sweepDrafts(location);
+    // The manifest diff runs on activation (spec, "Search (FTS5)"). It runs before the switch is saved,
+    // so a failed refresh leaves the previous active project in place.
+    await this.search.refresh(location);
     const previous = await this.active.get();
     await this.active.set(projectId);
     if (previous !== projectId) {

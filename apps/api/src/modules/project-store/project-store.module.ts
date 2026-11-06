@@ -14,6 +14,8 @@ import { FileLocks } from './locks.js';
 import { ProjectsController } from './projects.controller.js';
 import { ProjectStoreEvents } from './events.js';
 import { ProjectStoreProvider } from './provider.js';
+import { SearchController } from './search/search.controller.js';
+import { SearchService } from './search/search.service.js';
 
 /**
  * The Project store module (survey 20 §2). It owns the library, the active project, the file API,
@@ -22,7 +24,7 @@ import { ProjectStoreProvider } from './provider.js';
  */
 @Module({
   imports: [PlatformModule],
-  controllers: [ProjectsController, FileApiController],
+  controllers: [ProjectsController, FileApiController, SearchController],
   providers: [
     { provide: PROJECT_STORE_CONFIG, useFactory: () => projectStoreConfigFromEnv(process.env) },
     FileLocks,
@@ -30,6 +32,7 @@ import { ProjectStoreProvider } from './provider.js';
     LibraryService,
     FileApiService,
     EntitiesService,
+    SearchService,
     ProjectStoreEvents,
     ProjectStoreProvider,
   ],

@@ -5,6 +5,7 @@ import {
   SEARCH_LIMIT_DEFAULT,
   SEARCH_LIMIT_MAX,
   SearchPassageSchema,
+  SearchRebuildResultSchema,
   SearchRequestSchema,
   SearchResultsSchema,
   TopLevelDraftPathSchema,
@@ -59,6 +60,12 @@ describe('search request and passage', () => {
       { path: 'entities/b.md', offset: 40, snippet: 'second', score: 1 },
     ];
     expect(roundTrip(SearchResultsSchema, { passages })).toEqual({ passages });
+  });
+
+  it('round-trips the rebuild result with its file and passage counts', () => {
+    const result = { files: 3, passages: 12 };
+    expect(roundTrip(SearchRebuildResultSchema, result)).toEqual(result);
+    expect(SearchRebuildResultSchema.safeParse({ files: -1, passages: 0 }).success).toBe(false);
   });
 });
 

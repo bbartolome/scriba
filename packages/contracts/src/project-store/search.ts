@@ -49,3 +49,13 @@ export const SearchResultsSchema = z.object({
   passages: z.array(SearchPassageSchema),
 });
 export type SearchResults = z.infer<typeof SearchResultsSchema>;
+
+/**
+ * Answer to the rebuild POST: how many files and passages the rebuilt index holds. `files` counts
+ * every indexed file, including a text file with no passages.
+ */
+export const SearchRebuildResultSchema = z.object({
+  files: z.int().nonnegative(),
+  passages: z.int().nonnegative(),
+});
+export type SearchRebuildResult = z.infer<typeof SearchRebuildResultSchema>;
