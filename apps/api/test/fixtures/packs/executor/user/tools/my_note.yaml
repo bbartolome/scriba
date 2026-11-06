@@ -1,0 +1,17 @@
+schemaVersion: 1
+name: my_note
+description: Keep a note for the author.
+inputs:
+  type: object
+  properties:
+    topic:
+      type: string
+      title: Topic
+      x-scriba-type: text
+      x-scriba-port: true
+  required: [topic]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |-
+  Note on {{topic}}.

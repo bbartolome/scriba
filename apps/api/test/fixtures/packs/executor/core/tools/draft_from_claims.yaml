@@ -1,0 +1,29 @@
+schemaVersion: 1
+name: draft_from_claims
+description: Draft a passage from the claims it is given.
+inputs:
+  type: object
+  properties:
+    claims:
+      type: array
+      title: Claims
+      items:
+        type: string
+      minItems: 1
+      x-scriba-type: entity
+      x-scriba-entity-kinds: [claim]
+      x-scriba-port: true
+    topic:
+      type: string
+      title: Topic
+      minLength: 1
+  required: [claims]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |-
+  Draft a passage on {{topic}} from these claims.
+  {{#each claims}}
+  Claim {{@index}}:
+  {{entity this}}
+  {{/each}}

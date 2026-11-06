@@ -1,0 +1,18 @@
+schemaVersion: 1
+name: plan_recipe
+description: Plan a recipe graph from a goal.
+inputs:
+  type: object
+  properties:
+    goal:
+      type: string
+      title: Goal
+      x-scriba-type: text
+      x-scriba-port: true
+  required: [goal]
+  additionalProperties: false
+output: graph
+enabled: true
+prompt: |-
+  Recipe goal: {{goal}}
+  {{toolCatalog}}

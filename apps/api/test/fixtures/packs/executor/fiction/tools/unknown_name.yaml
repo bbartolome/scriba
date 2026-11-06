@@ -1,0 +1,15 @@
+schemaVersion: 1
+name: unknown_name
+description: A prompt that names something that is not an input.
+inputs:
+  type: object
+  properties:
+    topic:
+      type: string
+      title: Topic
+  required: [topic]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |-
+  Write about {{ghost}}.

@@ -1,0 +1,16 @@
+schemaVersion: 1
+name: unclosed_block
+description: A prompt with a block that is never closed.
+inputs:
+  type: object
+  properties:
+    topic:
+      type: string
+      title: Topic
+  required: [topic]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |-
+  Start {{#each topic}}
+  {{topic}}

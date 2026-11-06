@@ -1,0 +1,45 @@
+schemaVersion: 1
+name: summarize_people
+description: Draft a short profile of each person in the list.
+inputs:
+  type: object
+  properties:
+    person:
+      type: string
+      title: Main person
+      description: The person the profile is about.
+      x-scriba-type: entity
+      x-scriba-entity-kinds: [person]
+      x-scriba-port: true
+    extra_people:
+      type: array
+      title: More people
+      items:
+        type: string
+      x-scriba-type: entity
+      x-scriba-entity-kinds: [person]
+      x-scriba-port: true
+    style:
+      type: string
+      title: Style
+      x-scriba-type: style
+      x-scriba-port: true
+    tone:
+      type: string
+      title: Tone
+    notes:
+      type: string
+      title: Notes
+  required: [person]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |-
+  Write a short profile of the main person below.
+  {{entity person}}
+  {{#if tone}}Keep the tone {{tone}}.{{else}}Keep the tone plain.{{/if}}
+  Notes: [{{notes}}]
+  {{#each extra_people}}
+  {{entity this}}
+  {{/each}}
+  {{entity style}}
