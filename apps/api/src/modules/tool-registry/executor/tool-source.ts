@@ -1,8 +1,8 @@
 import type { Origin, ToolSpec } from '@bbartolome/scriba-contracts/tool-registry';
 
 /**
- * What the executor needs from the catalog: the effective tools, by name. The catalog service
- * (loader-validation) implements it. Until that lands, tests bind a fixture-backed source.
+ * What the executor needs from the catalog: the effective tools, by name. The Tool registry's
+ * catalog binds it through `ToolExecutorModule.register`.
  *
  * `enabled` is the effective switch (the author's override, else the spec's default). A tool that
  * did not load has `valid: false` and no spec, and the executor refuses it.
@@ -20,6 +20,8 @@ export type LoadedTool =
       readonly name: string;
       readonly origin: Origin;
       readonly enabled: boolean;
+      /** The lint errors that stopped the tool from loading, one line each, for `TOOL_INVALID`. */
+      readonly problems?: readonly string[];
     };
 
 export interface ToolSource {

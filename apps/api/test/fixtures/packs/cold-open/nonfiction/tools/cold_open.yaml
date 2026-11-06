@@ -1,11 +1,4 @@
-/**
- * The registry-owned cold-open fixture (survey 21 §3, phase:form-renderer). It is a test fixture,
- * not Genre packs content, and the loader replaces it in phase:loader-validation.
- *
- * `style` is listed in `required` on purpose. The emitter must still treat a style field as
- * optional in every view (spec, "Emission"), and the integration tests check that through GET.
- */
-export const COLD_OPEN_FIXTURE_SOURCE = `schemaVersion: 1
+schemaVersion: 1
 name: cold_open
 description: Open a chapter with a scene drawn from one person and their own notes.
 inputs:
@@ -43,4 +36,3 @@ enabled: true
 prompt: |
   Write a cold open about {{entity person}}.
   {{#if notes}}Use these notes: {{notes}}{{/if}}
-`;

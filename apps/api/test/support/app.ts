@@ -16,7 +16,10 @@ import {
   ProjectStoreModule,
   type ProjectStoreConfig,
 } from '../../src/modules/project-store/index.js';
-import { ToolRegistryModule } from '../../src/modules/tool-registry/index.js';
+import {
+  ToolRegistryModule,
+  type ToolRegistryConfig,
+} from '../../src/modules/tool-registry/index.js';
 import { runPreListenBoot } from '../../src/modules/platform/boot/pre-listen.js';
 import { parseScribaEnv } from '../../src/modules/platform/config/env.js';
 import { installTailnetFilter } from '../../src/modules/platform/network/tailnet-filter.js';
@@ -32,6 +35,7 @@ import { ProbeController } from './probe.controller.js';
 function createTestRootModule(
   publisher: StreamPublisherOptions | undefined,
   projectStore: ProjectStoreConfig,
+  registry: ToolRegistryConfig,
 ): Type<object> {
   const platform =
     publisher === undefined ? PlatformModule : PlatformModule.withStreamPublisherOptions(publisher);
@@ -39,7 +43,7 @@ function createTestRootModule(
     platform,
     SetupAuthModule,
     ProjectStoreModule.withConfig(projectStore),
-    ToolRegistryModule,
+    ToolRegistryModule.withConfig(registry),
   ];
 
   @Module({ imports, controllers: [ProbeController] })
@@ -57,6 +61,11 @@ export interface StartAppOptions {
   readonly examplesDir?: string;
   /** Installs the tailnet filter on the server, as main.ts does. Off unless a test opts in. */
   readonly tailnetFilter?: boolean;
+  /**
+   * The packs root (`SCRIBA_PACKS_DIR`) for the Tool registry. Unset, it is an empty folder beside
+   * the library, so the built-ins are empty and a test sees only the user pack.
+   */
+  readonly packsDir?: string;
 }
 
 export interface TempLibrary {
@@ -130,8 +139,12 @@ export async function startApp(
     booksDir,
     examplesDir: options.examplesDir ?? join(booksDir, '..', 'no-samples'),
   };
+  const registry: ToolRegistryConfig = {
+    booksDir,
+    packsDir: options.packsDir ?? join(booksDir, '..', 'no-packs'),
+  };
   const app = await NestFactory.create<NestExpressApplication>(
-    createTestRootModule(options.publisher, projectStore),
+    createTestRootModule(options.publisher, projectStore, registry),
     {
       logger: false,
       bodyParser: false,

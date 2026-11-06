@@ -17,7 +17,7 @@ import {
 } from '../../providers/index.js';
 import { renderPrompt, TemplateError } from '../template/renderer.js';
 import { argsMessage, validateArguments } from './args-validate.js';
-import { ACTIVE_PROJECT, type ActiveProjectSource } from './project-context.js';
+import { ACTIVE_PROJECT, type ActiveProject, type ActiveProjectSource } from './project-context.js';
 import { idsOf, inputFieldsOf, type InputField } from './input-fields.js';
 import { catalogEntriesOf, offeredTools } from './offering.js';
 import { toolError } from './errors.js';
@@ -110,8 +110,9 @@ export class ToolExecutorService {
 
   /** Steps 1 to 4 of the executor, shared by render and execute. */
   private async plan(name: string, input: ToolCallInput): Promise<Plan> {
-    // Step 1: the tool exists, is enabled and is valid.
-    const tool = await this.lookup(name);
+    // Step 1: the tool exists, is enabled, is valid and is offered to the active project.
+    const project = await this.projects.current();
+    const tool = await this.lookup(name, project);
     const spec = tool.spec;
 
     // Step 2: the arguments pass the schema, with defaults applied.
@@ -163,7 +164,6 @@ export class ToolExecutorService {
     // Step 4: the template renders from the validated arguments and the resolved entities only.
     // `{{toolCatalog}}` lists the enabled tools offered to the project only (survey 21 §7 item 11).
     // provisional: survey 21 §7 item 11
-    const project = await this.projects.current();
     const catalog: ToolCatalogEntry[] = catalogEntriesOf(
       offeredTools(await this.tools.list(), project),
     );
@@ -182,7 +182,12 @@ export class ToolExecutorService {
     };
   }
 
-  private async lookup(name: string): Promise<RunnableTool> {
+  /**
+   * The tool, when it can run for this project. The checks run in this order: it exists, it is
+   * enabled, it loaded, and it is offered to the project. A tool from another genre pack is not
+   * offered, so it is `TOOL_NOT_FOUND` for that project (spec, "Pack layout and loading").
+   */
+  private async lookup(name: string, project: ActiveProject): Promise<RunnableTool> {
     const tool = await this.tools.find(name);
     if (tool === undefined) {
       throw toolError('TOOL_NOT_FOUND', `No tool is named "${name}".`);
@@ -191,7 +196,20 @@ export class ToolExecutorService {
       throw toolError('TOOL_DISABLED', `Tool "${name}" is disabled, so it cannot run.`);
     }
     if (!tool.valid) {
-      throw toolError('TOOL_INVALID', `Tool "${name}" did not load, so it cannot run.`);
+      const problems = tool.problems ?? [];
+      throw toolError(
+        'TOOL_INVALID',
+        [
+          `Tool "${name}" did not load, so it cannot run.`,
+          ...problems.map((line) => `- ${line}`),
+        ].join('\n'),
+      );
+    }
+    if (offeredTools([tool], project).length === 0) {
+      throw toolError(
+        'TOOL_NOT_FOUND',
+        `Tool "${name}" is not offered to this project, so it cannot run.`,
+      );
     }
     return tool;
   }
