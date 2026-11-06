@@ -21,6 +21,11 @@ body {
   margin: 0;
 }
 
+h1 {
+  font: var(--mat-sys-headline-medium);
+  margin: 0.5em 0;
+}
+
 main {
   padding: 16px;
 }

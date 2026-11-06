@@ -1,4 +1,34 @@
-<mat-toolbar color="primary">Scriba</mat-toolbar>
-<main>
-  <p>The web app is a placeholder in scaffold.</p>
-</main>
+<mat-toolbar color="primary" class="toolbar">
+  <span class="title">Scriba</span>
+  <span class="spacer"></span>
+  @if (connection() !== 'open') {
+  <span class="connection" role="status">{{ connectionLabel() }}</span>
+  }
+  <button
+    mat-icon-button
+    type="button"
+    class="theme-toggle"
+    [attr.aria-label]="themeLabel()"
+    (click)="theme.cycle()"
+  >
+    <svg class="theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path [attr.d]="themeIconPath()" />
+    </svg>
+  </button>
+</mat-toolbar>
+
+@for (notice of notices.banners(); track notice.id) {
+<div class="banner" role="status" [attr.data-level]="notice.level">
+  <span>{{ notice.message }}</span>
+  @if (notice.dismissible) {
+  <button mat-button type="button" (click)="notices.clear(notice.id)">Dismiss</button>
+  }
+</div>
+}
+
+<div class="layout" [class.phone]="device() === 'phone'">
+  <app-shell-nav />
+  <main>
+    <router-outlet />
+  </main>
+</div>
