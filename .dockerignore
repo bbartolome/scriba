@@ -1,0 +1,9 @@
+.git
+.claude
+docs
+**/node_modules
+**/dist
+**/test-results
+**/.scratch-books
+.scratch-books
+*.log
