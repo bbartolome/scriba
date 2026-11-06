@@ -1,0 +1,9 @@
+{
+  "name": "drop-mid-stream",
+  "description": "Streams the start of an answer, then destroys the connection.",
+  "steps": [
+    {
+      "respond": [{ "type": "content", "deltas": ["Partial ", "answer"] }, { "type": "drop" }]
+    }
+  ]
+}
