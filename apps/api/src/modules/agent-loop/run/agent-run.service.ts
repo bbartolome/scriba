@@ -139,7 +139,9 @@ export class AgentRunService implements OnModuleInit {
     this.record(live, live.nextSeq(), 'intent', { intent: request.intent });
     void this.closeActiveInterrupted();
     this.drive(live, model, modelFailure).catch((error: unknown) => {
-      this.logger.error(`An agent run could not finish cleanly: ${error instanceof Error ? error.name : 'unknown error'}`);
+      this.logger.error(
+        `An agent run could not finish cleanly: ${error instanceof Error ? error.name : 'unknown error'}`,
+      );
     });
     return { runId, conversationId };
   }
