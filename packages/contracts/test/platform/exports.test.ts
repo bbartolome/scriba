@@ -2,10 +2,12 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
-// Runs after `npm run build`: these checks read dist/ and the emitted package.json.
+// These checks read dist/. CI runs `npm test` before `npm run build`, so the suite builds dist/
+// itself first, with the hoisted TypeScript compiler.
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const TSC_BIN = join(PACKAGE_ROOT, '..', '..', 'node_modules', 'typescript', 'bin', 'tsc');
 
 const SUBPATHS = [
   'platform',
@@ -47,6 +49,15 @@ process.stdout.write(JSON.stringify({ resolved, rootResolves }));
 `;
 
 describe('package exports', () => {
+  beforeAll(() => {
+    const build = spawnSync(process.execPath, [TSC_BIN, '-p', 'tsconfig.json'], {
+      cwd: PACKAGE_ROOT,
+      encoding: 'utf8',
+    });
+    expect(build.stderr + build.stdout, 'tsc build for the exports test failed').toBe('');
+    expect(build.status).toBe(0);
+  });
+
   it('has exactly the ten subpath keys and no "." export', () => {
     expect(Object.keys(pkg.exports).sort()).toEqual(SUBPATHS.map((s) => `./${s}`).sort());
     // toHaveProperty reads '.' as a path separator, so check the key list directly.
