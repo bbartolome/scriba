@@ -1,7 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { afterEach, describe, expect, it } from 'vitest';
 import { PlatformEnvelopeSchema } from '@bbartolome/scriba-contracts/platform';
-import { createTempLibrary, type TempLibrary } from './support/app.js';
+import { createTempLibrary, signIn, type TempLibrary } from './support/app.js';
 import { freePort } from './support/free-port.js';
 import { MAIN_JS } from './support/process.js';
 import { SseClient } from './support/sse-client.js';
@@ -54,7 +54,10 @@ describe('SIGTERM on the built app', () => {
     });
 
     await waitFor(() => output.includes('Listening on'), 20_000);
-    const stream = await SseClient.open(`http://127.0.0.1:${port}/events`);
+    const cookie = await signIn(library.booksDir, `http://127.0.0.1:${port}`);
+    const stream = await SseClient.open(`http://127.0.0.1:${port}/events`, {
+      headers: { cookie },
+    });
     try {
       expect(PlatformEnvelopeSchema.parse(await stream.nextEnvelope()).type).toBe('hello');
 
