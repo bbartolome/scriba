@@ -16,6 +16,7 @@ import {
   ProjectStoreModule,
   type ProjectStoreConfig,
 } from '../../src/modules/project-store/index.js';
+import { ToolRegistryModule } from '../../src/modules/tool-registry/index.js';
 import { runPreListenBoot } from '../../src/modules/platform/boot/pre-listen.js';
 import { parseScribaEnv } from '../../src/modules/platform/config/env.js';
 import { installTailnetFilter } from '../../src/modules/platform/network/tailnet-filter.js';
@@ -34,7 +35,12 @@ function createTestRootModule(
 ): Type<object> {
   const platform =
     publisher === undefined ? PlatformModule : PlatformModule.withStreamPublisherOptions(publisher);
-  const imports = [platform, SetupAuthModule, ProjectStoreModule.withConfig(projectStore)];
+  const imports = [
+    platform,
+    SetupAuthModule,
+    ProjectStoreModule.withConfig(projectStore),
+    ToolRegistryModule,
+  ];
 
   @Module({ imports, controllers: [ProbeController] })
   class TestRootModule {}
