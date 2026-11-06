@@ -19,7 +19,6 @@ import {
   type ProviderClient,
   type ResolvedModel,
   type ToolCallEvent,
-  type ToolFunctionDefinition,
 } from '../../providers/index.js';
 import { StreamPublisher } from '../../platform/index.js';
 import { readAgentSettings } from '../agent-settings.js';
@@ -28,6 +27,7 @@ import {
   systemMessage,
   budgetCharacters,
   fitMessages,
+  type ProjectFacts,
   type Turn,
 } from '../context/prompt.js';
 import {
@@ -37,13 +37,14 @@ import {
   RUN_NOT_FOUND_MESSAGE,
 } from '../errors.js';
 import { ProjectAccess } from '../project-access.js';
+import { executionFailureText, parseArguments } from '../tools/builtin-tools.js';
 import {
-  BUILTIN_TOOLS,
-  builtinToolNamed,
-  executionFailureText,
-  parseArguments,
-  type BuiltinTool,
-} from '../tools/builtin-tools.js';
+  offerTools,
+  type CallContext,
+  type OfferedTool,
+  type PreparedCall,
+} from '../tools/offered.js';
+import { ToolAccess } from '../tools/tool-access.js';
 import { TranscriptStore } from '../transcript/transcript-store.js';
 import { LiveRun, RunRegistry } from './live-run.js';
 import { runStateFromEntries } from './run-state.js';
@@ -62,11 +63,10 @@ interface Reply {
   calls: ToolCallEvent[];
 }
 
-function functionOf(tool: BuiltinTool): ToolFunctionDefinition {
-  return {
-    type: 'function',
-    function: { name: tool.name, description: tool.description, parameters: tool.parameters },
-  };
+/** What one run offers and runs with: its tools, and the model the draft provenance names. */
+interface RunTools {
+  readonly offered: readonly OfferedTool[];
+  readonly modelName: string;
 }
 
 /**
@@ -85,6 +85,7 @@ export class AgentRunService implements OnModuleInit {
     private readonly publisher: StreamPublisher,
     private readonly transcripts: TranscriptStore,
     private readonly registry: RunRegistry,
+    private readonly tools: ToolAccess,
   ) {}
 
   onModuleInit(): void {
@@ -248,6 +249,7 @@ export class AgentRunService implements OnModuleInit {
     const budget = budgetCharacters(model.provider.contextSize, model.provider.maxTokens);
     const cap = live.stepCap;
     const turn: ChatMessage[] = [];
+    const tools = await this.offer(live, facts, model.choice.model);
 
     for (let step = 1; step <= cap; step += 1) {
       if (live.abort.signal.aborted) {
@@ -268,7 +270,7 @@ export class AgentRunService implements OnModuleInit {
       // author saw (a stopped run's text is the run's text).
       const reply: Reply = { text: '', calls: [] };
       try {
-        await this.streamReply(live, model, messages, reply);
+        await this.streamReply(live, model, messages, reply, tools);
       } finally {
         if (reply.text !== '') {
           this.record(live, live.nextSeq(), 'assistant-text', { text: reply.text });
@@ -290,7 +292,7 @@ export class AgentRunService implements OnModuleInit {
         if (live.abort.signal.aborted) {
           return live.cause ?? 'stopped';
         }
-        const result = await this.runCall(live, call);
+        const result = await this.runCall(live, call, tools);
         turn.push({ role: 'tool', toolCallId: call.id, content: result });
       }
     }
@@ -304,6 +306,30 @@ export class AgentRunService implements OnModuleInit {
   }
 
   /**
+   * The tools this run is offered (spec, "Tool families"), read once at the start of the run. A
+   * registry tool with a reserved name is left out, and reported once in the transcript.
+   */
+  private async offer(live: LiveRun, facts: ProjectFacts, modelName: string): Promise<RunTools> {
+    const offer = await offerTools(this.tools, {
+      id: live.projectId,
+      genrePack: facts.genrePack,
+      styleProfile: facts.styleProfile,
+    });
+    // The transcript kinds are closed by the contract, so the clash is written as a tool-error line with
+    // a synthetic call id that no card matches.
+    // provisional: survey 23 §3 P3 (judgement: no transcript kind for a reserved-name clash)
+    for (const name of offer.leftOut) {
+      this.record(live, live.nextSeq(), 'tool-error', {
+        callId: `reserved:${name}`,
+        name,
+        message: `Tool "${name}" is left out of this agent run, because its name is reserved for a built-in tool.`,
+        attempt: 1,
+      });
+    }
+    return { offered: offer.tools, modelName };
+  }
+
+  /**
    * One model call: streams the text as `token-delta`, and collects the tool calls into `reply`. The
    * caller owns `reply`, so the text that arrived is kept even when the stream throws.
    */
@@ -312,11 +338,14 @@ export class AgentRunService implements OnModuleInit {
     model: ResolvedModel,
     messages: ChatMessage[],
     reply: Reply,
+    tools: RunTools,
   ): Promise<void> {
-    const tools = BUILTIN_TOOLS.filter((tool) => !live.withdrawn.has(tool.name)).map(functionOf);
+    const offered = tools.offered
+      .filter((tool) => !live.withdrawn.has(tool.name))
+      .map((tool) => tool.definition);
     const stream = this.client.stream({
       messages,
-      tools,
+      tools: offered,
       toolChoice: 'auto',
       target: { kind: 'choice', choice: model.choice },
       signal: live.abort.signal,
@@ -340,8 +369,8 @@ export class AgentRunService implements OnModuleInit {
    * `tool-call-started`, `tool-call-args`, then `tool-call-result` or `tool-call-error`. Returns the
    * text the model receives as the tool result.
    */
-  private async runCall(live: LiveRun, call: ToolCallEvent): Promise<string> {
-    const tool = builtinToolNamed(call.name);
+  private async runCall(live: LiveRun, call: ToolCallEvent, tools: RunTools): Promise<string> {
+    const tool = tools.offered.find((candidate) => candidate.name === call.name);
     const family: ToolFamily = tool?.family ?? 'project';
     this.send(live, {
       module: 'agent-loop',
@@ -366,18 +395,27 @@ export class AgentRunService implements OnModuleInit {
       return this.fail(live, call, WITHDRAWN_TEXT);
     }
 
-    const check = tool.check(parsed.value);
-    this.argsEvent(live, call.id, parsed.value, check.ok);
-    this.recordCall(live, call, family, parsed.value);
-    if (!check.ok) {
-      return this.fail(live, call, check.message);
+    // The check is the tool's own: Ajv for the built-in tools, and the registry's Ajv and entity
+    // resolution for a narrative tool. Its message is the model's and the card's text.
+    const ctx: CallContext = {
+      projectId: live.projectId,
+      store: this.access.store,
+      runId: live.runId,
+      callId: call.id,
+      model: tools.modelName,
+      signal: live.abort.signal,
+    };
+    const prepared = await this.prepare(tool, ctx, parsed.value);
+    const args = prepared.ok ? prepared.arguments : parsed.value;
+    this.argsEvent(live, call.id, args, prepared.ok);
+    this.recordCall(live, call, family, args);
+    if (!prepared.ok) {
+      return this.fail(live, call, prepared.message);
     }
     try {
-      const outcome = await tool.execute(
-        { projectId: live.projectId, store: this.access.store },
-        parsed.value,
-      );
+      const outcome = await prepared.run();
       live.failures.set(tool.name, 0);
+      const sourcesUsed = outcome.sourcesUsed ?? [];
       this.send(live, {
         module: 'agent-loop',
         type: 'tool-call-result',
@@ -387,7 +425,7 @@ export class AgentRunService implements OnModuleInit {
           callId: call.id,
           summary: outcome.summary,
           output: outcome.output,
-          sourcesUsed: [],
+          sourcesUsed,
         },
       });
       this.record(live, live.nextSeq(), 'tool-result', {
@@ -395,14 +433,28 @@ export class AgentRunService implements OnModuleInit {
         name: call.name,
         summary: outcome.summary,
         output: outcome.output,
-        sourcesUsed: [],
+        sourcesUsed,
         ...(outcome.originalLength === undefined
           ? {}
           : { truncated: { originalLength: outcome.originalLength } }),
+        ...(outcome.provenance === undefined ? {} : { provenance: outcome.provenance }),
       });
       return outcome.modelText;
     } catch (error) {
       return this.fail(live, call, executionFailureText(error));
+    }
+  }
+
+  /** The tool's check. A failure that is not a readable message counts as an invalid call. */
+  private async prepare(
+    tool: OfferedTool,
+    ctx: CallContext,
+    args: Record<string, unknown>,
+  ): Promise<PreparedCall> {
+    try {
+      return await tool.prepare(ctx, args);
+    } catch (error) {
+      return { ok: false, message: executionFailureText(error) };
     }
   }
 

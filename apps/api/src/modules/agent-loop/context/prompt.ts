@@ -15,10 +15,12 @@ import type { ProjectStoreProvider } from '../../project-store/index.js';
 // provisional: survey 23 §7 item 14
 export const SYSTEM_PROMPT = [
   'You are the writing assistant for one book project in Scriba.',
-  'You can list and read the project files with list_files and read_file. Paths are relative to the project folder and use forward slashes. You cannot reach anything outside the project.',
+  'You can list and read the project files with list_files and read_file, and search the sources and entities with search_notes. Paths are relative to the project folder and use forward slashes. You cannot reach anything outside the project.',
+  'Some tools draft a passage from the entities you name. Pass entity IDs exactly as the project lists them, and never invent one.',
   'This version only reads. Do not claim to have changed any file.',
   "The author's outline is at sources/outline.md.",
   'Base your answer on the files you read, and say when the files do not cover the question.',
+  'Cite the entities and sources you rely on by their IDs, in the form [@id].',
   'When you have what you need, answer in plain text and stop calling tools.',
 ].join('\n');
 
@@ -36,6 +38,8 @@ export interface FolderFacts {
 export interface ProjectFacts {
   readonly title?: string;
   readonly genrePack?: string;
+  /** The project's style profile, from `project.yaml`. A narrative tool uses it when a style field is empty. */
+  readonly styleProfile?: string;
   readonly folders: readonly FolderFacts[];
 }
 
@@ -65,9 +69,11 @@ export async function projectFacts(
     .catch(() => undefined);
   const title = fieldOf(yaml, 'title');
   const genrePack = fieldOf(yaml, 'genrePack');
+  const styleProfile = fieldOf(yaml, 'styleProfile');
   return {
     ...(title === undefined ? {} : { title }),
     ...(genrePack === undefined ? {} : { genrePack }),
+    ...(styleProfile === undefined ? {} : { styleProfile }),
     folders,
   };
 }
