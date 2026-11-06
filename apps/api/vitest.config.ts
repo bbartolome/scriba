@@ -10,5 +10,11 @@ export default defineConfig({
     globalSetup: ['test/support/global-setup.ts'],
     testTimeout: 20_000,
     hookTimeout: 60_000,
+    // The type tests (`*.test-d.ts`) are checked by tsc, so a shape that drifts fails the suite.
+    typecheck: {
+      enabled: true,
+      include: ['test/**/*.test-d.ts'],
+      tsconfig: './tsconfig.typecheck.json',
+    },
   },
 });
