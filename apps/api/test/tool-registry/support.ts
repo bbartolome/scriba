@@ -1,26 +1,14 @@
 import 'reflect-metadata';
-import type { AddressInfo } from 'node:net';
-import { Module, type INestApplication } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { cp, mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseScenario, type Scenario } from '../../../../e2e/fixtures/mock-openai/scenario.js';
 import {
   startMockOpenAi,
   type RecordedRequest,
   type RunningMockOpenAi,
 } from '../../../../e2e/fixtures/mock-openai/server.js';
-import { PlatformModule } from '../../src/modules/platform/index.js';
-import { runPreListenBoot } from '../../src/modules/platform/boot/pre-listen.js';
-import { parseScribaEnv } from '../../src/modules/platform/config/env.js';
-import { SetupAuthModule } from '../../src/modules/setup-auth/setup-auth.module.js';
-import {
-  ACTIVE_PROJECT,
-  TOOL_SOURCE,
-  ToolExecutorModule,
-  type ToolSource,
-} from '../../src/modules/tool-registry/executor/index.js';
-import { ProvidersModule } from '../../src/modules/providers/index.js';
-import { signIn, withSession } from '../support/app.js';
-import { FIXTURE_PROJECT } from './fixture-catalog.js';
+import { startApp, withSession, type RunningApp } from '../support/app.js';
 
 // The Platform mock is used as it is, read from the e2e tree. Nothing is added there: each test's
 // scenarios are built in code and validated by the mock's own parser. The plain-completion scenario
@@ -29,44 +17,50 @@ import { FIXTURE_PROJECT } from './fixture-catalog.js';
 // The mock is Platform's (phase:test-harness, on main). The executor gates on it, as item 17 records.
 // provisional: survey 21 §7 item 17
 
-/** The root module: Platform, Setup & auth for the guard, Model providers, and the executor. */
-export function rootModuleFor(source: ToolSource): new () => object {
-  @Module({
-    imports: [
-      PlatformModule,
-      SetupAuthModule,
-      ProvidersModule,
-      ToolExecutorModule.register({
-        toolSource: { provide: TOOL_SOURCE, useValue: source },
-        activeProject: {
-          provide: ACTIVE_PROJECT,
-          useValue: { current: async () => FIXTURE_PROJECT },
-        },
-      }),
-    ],
-  })
-  class ExecutorTestRootModule {}
-  return ExecutorTestRootModule;
+/**
+ * The executor's fixture packs: one folder per built-in origin (`core`, `nonfiction`, `fiction`).
+ * The real loader reads them as the packs root, so every fixture is linted as a built-in.
+ */
+export const FIXTURE_PACKS_DIR = fileURLToPath(
+  new URL('../fixtures/packs/executor/', import.meta.url),
+);
+
+/** The fixture user tools. They are copied into the library's user pack before the app starts. */
+const USER_FIXTURES_DIR = join(FIXTURE_PACKS_DIR, 'user', 'tools');
+
+export type RunningExecutorApp = RunningApp;
+
+/**
+ * Starts the app on the executor fixture packs, with the fixture user tool in the library's user
+ * pack and a nonfiction project active. The Tool registry is the real catalog (phase:loader-validation),
+ * so each fixture is loaded and linted the way the packs are.
+ */
+export async function startExecutorApp(booksDir: string): Promise<RunningExecutorApp> {
+  const userTools = join(booksDir, '.scriba', 'packs', 'user', 'tools');
+  await mkdir(userTools, { recursive: true });
+  await cp(USER_FIXTURES_DIR, userTools, { recursive: true });
+  const running = await startApp(booksDir, { packsDir: FIXTURE_PACKS_DIR });
+  await createActiveProject(running, 'nonfiction');
+  return running;
 }
 
-export interface RunningExecutorApp {
-  readonly app: INestApplication;
-  readonly baseUrl: string;
-  readonly cookie: string;
-}
-
-/** Runs the pre-listen boot for a library, then starts the app on an ephemeral loopback port. */
-export async function startExecutorApp(
-  booksDir: string,
-  source: ToolSource,
-): Promise<RunningExecutorApp> {
-  await runPreListenBoot(parseScribaEnv({ SCRIBA_BOOKS_DIR: booksDir }));
-  const app = await NestFactory.create(rootModuleFor(source), { logger: false });
-  await app.listen(0, '127.0.0.1');
-  const { port } = app.getHttpServer().address() as AddressInfo;
-  const baseUrl = `http://127.0.0.1:${port}`;
-  const cookie = await signIn(booksDir, baseUrl);
-  return { app, baseUrl, cookie };
+/**
+ * Creates a project of one genre pack and makes it the active project, through the Project store's
+ * own routes. Returns the project's ID.
+ */
+export async function createActiveProject(
+  running: RunningExecutorApp,
+  genrePack: 'nonfiction' | 'fiction',
+): Promise<string> {
+  const created = await api(running, 'POST', '/api/project-store/projects/new', {
+    title: `${genrePack} fixture`,
+    genrePack,
+  });
+  if (created.status !== 201) throw new Error(`project create failed: ${created.status}`);
+  const id = (created.body as { project: { id: string } }).project.id;
+  const activated = await api(running, 'POST', `/api/project-store/projects/${id}/activate`, {});
+  if (activated.status !== 200) throw new Error(`project activate failed: ${activated.status}`);
+  return id;
 }
 
 export interface ApiResult {
@@ -77,7 +71,7 @@ export interface ApiResult {
 /** One signed-in request. `signal` lets a test abort the client side of a call. */
 export async function api(
   running: RunningExecutorApp,
-  method: 'GET' | 'POST',
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   path: string,
   body?: unknown,
   signal?: AbortSignal,

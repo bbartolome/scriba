@@ -1,0 +1,9 @@
+schemaVersion: 1
+kind: person
+title: Person
+description: A person in the project.
+fields:
+  type: object
+  properties:
+    name:
+      type: string

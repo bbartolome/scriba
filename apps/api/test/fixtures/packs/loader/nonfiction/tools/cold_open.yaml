@@ -1,0 +1,36 @@
+schemaVersion: 1
+name: cold_open
+description: Open a chapter with a scene drawn from one person and their own notes.
+inputs:
+  type: object
+  properties:
+    person:
+      type: string
+      title: Person
+      description: Entity ID of the person to open on.
+      x-scriba-type: entity
+      x-scriba-entity-kinds: [person]
+      x-scriba-port: true
+    notes:
+      type: string
+      title: Notes
+      x-scriba-type: text
+      x-scriba-port: true
+    style:
+      type: string
+      title: Style
+      x-scriba-type: style
+      x-scriba-port: true
+    tone:
+      type: string
+      title: Tone
+      enum: [warm, dry, urgent]
+      default: warm
+      x-scriba-control: select
+  required: [person]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |
+  Write a cold open about {{entity person}}.
+  {{#if notes}}Use these notes: {{notes}}{{/if}}

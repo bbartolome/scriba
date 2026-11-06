@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { Ajv } from 'ajv';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
@@ -24,12 +25,15 @@ interface Answer {
   readonly body: unknown;
 }
 
+/** The cold-open tool, as a built-in of a fixture pack (the loader reads it like any built-in). */
+const COLD_OPEN_PACKS_DIR = fileURLToPath(new URL('../fixtures/packs/cold-open/', import.meta.url));
+
 let library: TempLibrary;
 let running: RunningApp;
 
 beforeAll(async () => {
   library = await createTempLibrary();
-  running = await startApp(library.booksDir);
+  running = await startApp(library.booksDir, { packsDir: COLD_OPEN_PACKS_DIR });
 });
 
 afterAll(async () => {
@@ -66,7 +70,11 @@ describe('phase:form-renderer: one response drives the form and the node body', 
     const body = await detail();
     expect(body.name).toBe('cold_open');
     expect(body.enabled).toBe(true);
-    expect(body.lint.diagnostics).toEqual([]);
+    // The real lint runs now. Its one finding is spike note 3: the fixture lists `style` as required,
+    // and a style field is never required, so the lint warns and nothing blocks.
+    expect(
+      body.lint.diagnostics.map((diagnostic) => [diagnostic.rule, diagnostic.severity]),
+    ).toEqual([['style-required', 'warning']]);
     expect(body.form).toBeDefined();
     expect(body.ports).toBeDefined();
     expect(body.functionSchema).toBeDefined();

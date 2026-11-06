@@ -1,0 +1,16 @@
+schemaVersion: 1
+name: bad_hint
+description: A tool whose input carries a hint the vocabulary does not have.
+inputs:
+  type: object
+  properties:
+    topic:
+      type: string
+      title: Topic
+      x-scriba-typo: true
+  required: [topic]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |
+  Write about {{topic}}.

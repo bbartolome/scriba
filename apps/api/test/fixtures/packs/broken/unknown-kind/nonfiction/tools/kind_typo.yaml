@@ -1,0 +1,18 @@
+schemaVersion: 1
+name: kind_typo
+description: A tool whose entity kind is misspelt, so no entity type declares it.
+inputs:
+  type: object
+  properties:
+    person:
+      type: string
+      title: Person
+      x-scriba-type: entity
+      x-scriba-entity-kinds: [persn]
+      x-scriba-port: true
+  required: [person]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |
+  Write about {{entity person}}.

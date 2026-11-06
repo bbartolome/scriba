@@ -6,7 +6,7 @@ import { ToolExecutorService } from './executor.service.js';
 /**
  * The executor module. It imports Model providers for the client under `PROVIDER_CLIENT`, and it
  * takes its catalog and active-project bindings from the importing module, so the catalog service
- * (loader-validation) and the Project store reader plug in without this module knowing them.
+ * (the Tool registry's catalog and active-project reader) plug in without this module knowing them.
  * `ToolExecutorService` is exported for the Agent loop and the Graph runner.
  */
 @Module({})

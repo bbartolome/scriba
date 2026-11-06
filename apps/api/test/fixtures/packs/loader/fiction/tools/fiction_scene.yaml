@@ -1,0 +1,17 @@
+schemaVersion: 1
+name: fiction_scene
+description: Write a fiction scene from a premise.
+inputs:
+  type: object
+  properties:
+    premise:
+      type: string
+      title: Premise
+      x-scriba-type: text
+      x-scriba-port: true
+  required: [premise]
+  additionalProperties: false
+output: draft
+enabled: true
+prompt: |
+  Write a scene from this premise: {{premise}}

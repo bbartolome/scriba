@@ -2,7 +2,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { parseScenario } from '../../../../e2e/fixtures/mock-openai/scenario.js';
 import { createTempLibrary, type TempLibrary } from '../support/app.js';
 import { SYSTEM_MESSAGES } from '../../src/modules/tool-registry/executor/output.js';
-import { loadFixtureCatalog } from './fixture-catalog.js';
 import {
   api,
   contentScenario,
@@ -60,7 +59,7 @@ describe('POST /api/tools/:name/execute', () => {
 
   beforeAll(async () => {
     library = await createTempLibrary();
-    running = await startExecutorApp(library.booksDir, await loadFixtureCatalog());
+    running = await startExecutorApp(library.booksDir);
     mock = await startTestMock([
       contentScenario(SCENARIOS.summary, 'Anna is a careful ', 'mapmaker.\n'),
       contentScenario(SCENARIOS.draftClaims, '  A passage that cites both claims.  '),

@@ -72,6 +72,7 @@ function formField(field: FieldFacts): FormField {
 }
 
 /**
+ * Spike note 2 (PR #91): the spec names no default controls, so the emitter keeps these choices.
  * The control the renderer picks when the spec names none. Entity and style fields get their
  * pickers, an enum gets a select, and the JSON type decides the rest.
  */

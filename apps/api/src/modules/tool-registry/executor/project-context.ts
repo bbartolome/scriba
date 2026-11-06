@@ -3,7 +3,7 @@ import type { GenrePackName } from '@bbartolome/scriba-contracts/tool-registry';
 /**
  * The active project, as the executor needs it: its ID, for the model choice (Model providers),
  * and its genre pack, for the offering rule. The real reader comes from the Project store's file
- * API (#20 phase:files). Until then the tests bind a fixed project.
+ * API (#20 phase:files). The Tool registry binds the real reader (`catalog/active-project.ts`).
  */
 // provisional: survey 21 §7 item 6
 export interface ActiveProject {

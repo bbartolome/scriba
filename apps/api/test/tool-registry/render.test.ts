@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTempLibrary, type TempLibrary } from '../support/app.js';
-import { loadFixtureCatalog } from './fixture-catalog.js';
 import {
   api,
   contentScenario,
@@ -28,7 +27,7 @@ describe('POST /api/tools/:name/render', () => {
 
   beforeAll(async () => {
     library = await createTempLibrary();
-    running = await startExecutorApp(library.booksDir, await loadFixtureCatalog());
+    running = await startExecutorApp(library.booksDir);
     // Render never calls the model. This scenario exists so a call would be recorded, if one happened.
     mock = await startTestMock([contentScenario('render-probe', 'never sent')]);
     await useScenario(running, mock, 'render-probe');

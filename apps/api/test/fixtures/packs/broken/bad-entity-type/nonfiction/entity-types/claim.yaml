@@ -1,0 +1,8 @@
+schemaVersion: 1
+kind: claim
+description: A claim with no title, which the envelope requires.
+fields:
+  type: object
+  properties:
+    text:
+      type: string
