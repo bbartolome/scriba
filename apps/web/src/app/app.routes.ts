@@ -36,6 +36,13 @@ export const routes: Routes = [
     nav: { label: 'Projects', icon: 'folder', order: 5 },
     minClass: 'phone',
   }),
+  // The Tools dev preview has no nav entry yet. The editor phase adds it to the nav (survey 21 §3).
+  featureRoute({
+    path: 'tools',
+    load: () =>
+      import('./features/tool-registry').then((feature) => feature.TOOL_REGISTRY_FEATURE_ROUTES),
+    minClass: 'tablet',
+  }),
   { path: 'larger-screen', component: LargerScreenPage },
   // The setup link lands here (survey 18, the handshake). It has no nav entry: the setup steps are a
   // later phase, and the link only has to reach this page.

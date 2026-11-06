@@ -2,6 +2,7 @@
  * The public surface of the Tool registry feature. The Graph runner's tool node imports the form
  * component and the entity chip type from here, and nothing deeper.
  */
+export { TOOL_REGISTRY_FEATURE_ROUTES } from './routes';
 export {
   ToolFormComponent,
   type ToolFormLayout,
