@@ -38,3 +38,10 @@ export const AGENT_TRANSCRIPT_ROUTE = `${AGENT_ROUTE_PREFIX}/projects/:projectId
  * runs as an agent run whose only step is the check. The route is [proposed] (spec §4).
  */
 export const AGENT_GROUNDING_CHECK_ROUTE = `${AGENT_ROUTE_PREFIX}/projects/:projectId/grounding-checks`;
+
+/**
+ * GET and PUT. The `agent` section of settings.yaml (`AgentSettingsSchema`). [proposed]: the spec
+ * puts the settings in a sheet in the chat panel and names no route for them. Not project-scoped,
+ * because the section is app-wide (survey decision 6). PUT takes the whole section and answers it.
+ */
+export const AGENT_SETTINGS_ROUTE = `${AGENT_ROUTE_PREFIX}/settings`;
