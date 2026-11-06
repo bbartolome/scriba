@@ -54,6 +54,9 @@ describe('project.yaml with and without order and export', () => {
     expect(parsed.futureTopLevelKey).toEqual({ nested: ['a'] });
   });
 
+  // The repo has no examples/ folder yet, so the Platform sample check cannot run. This test checks a
+  // nonfiction-shaped fixture built here, and the sample check stays an open box until the sample lands.
+  // provisional: survey 25 §7 item 21
   it('keeps the authored non-alphabetical order and statuses in the nonfiction-shaped fixture', () => {
     const parsed = NarrowedProjectYamlSchema.parse(NONFICTION_PROJECT_YAML);
     expect(parsed.order?.map((entry) => entry.path)).toEqual(['drafts/ch02.md', 'drafts/ch01.md']);
