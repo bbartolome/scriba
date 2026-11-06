@@ -29,6 +29,13 @@ export const routes: Routes = [
     nav: { label: 'Dummy', icon: 'science', order: 10 },
     minClass: 'tablet',
   }),
+  featureRoute({
+    path: 'projects',
+    load: () =>
+      import('./features/project-store').then((feature) => feature.PROJECT_STORE_FEATURE_ROUTES),
+    nav: { label: 'Projects', icon: 'folder', order: 5 },
+    minClass: 'phone',
+  }),
   { path: 'larger-screen', component: LargerScreenPage },
   // The setup link lands here (survey 18, the handshake). It has no nav entry: the setup steps are a
   // later phase, and the link only has to reach this page.
