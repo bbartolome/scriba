@@ -44,6 +44,15 @@ export const routes: Routes = [
     minClass: 'phone',
     scope: 'project',
   }),
+  // The project's model settings (survey 19 §3, phase:project-override). It has no nav entry: the
+  // page is reached from a project's route, and the Shell reads the project from the URL.
+  // provisional: survey 19 §7 Q16 (a project-scoped route under projects/:projectId/)
+  featureRoute({
+    path: 'projects/:projectId/settings',
+    load: () => import('./features/providers').then((feature) => feature.PROJECT_MODEL_ROUTES),
+    minClass: 'phone',
+    scope: 'project',
+  }),
   // The Tools dev preview has no nav entry yet. The editor phase adds it to the nav (survey 21 §3).
   featureRoute({
     path: 'tools',

@@ -3,5 +3,5 @@
  * `/setup` providers step imports the panel from here.
  */
 // provisional: survey 19 §7 Q10 (one public export for the panel, which setup imports)
-export { PROVIDERS_SETTINGS_ROUTES } from './providers.routes';
+export { PROVIDERS_SETTINGS_ROUTES, PROJECT_MODEL_ROUTES } from './providers.routes';
 export { ProvidersPanelComponent } from './providers-panel.component';

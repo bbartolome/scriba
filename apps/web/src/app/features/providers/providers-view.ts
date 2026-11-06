@@ -2,6 +2,7 @@ import {
   PRESETS,
   ProviderDraftSchema,
   type ConnectionTestStage,
+  type EffectiveModelSource,
   type PresetHint,
   type ProviderDraft,
   type ProviderRead,
@@ -139,3 +140,27 @@ export const DELETE_DEFAULT_REFUSAL = 'Pick another app default first, then dele
 export function messageOf(error: unknown): string {
   return error instanceof ApiError ? error.message : 'Something went wrong. Try again.';
 }
+
+/**
+ * The project model panel's readout of where the effective model came from (spec #19, "Project
+ * override"). The panel shows it next to the effective model.
+ */
+export function sourceText(source: EffectiveModelSource): string {
+  switch (source) {
+    case 'project':
+      return 'This project sets its own model.';
+    case 'app':
+      return 'This project uses the app default.';
+    case 'auto':
+      return "The app default names no model, so the provider's first listed model is used.";
+  }
+}
+
+/** A project's override must name a model. An empty one would mean `auto`, which is never saved. */
+export const PROJECT_MODEL_NAME_NEEDED =
+  'Pick a model name for this project, or choose "Use app default".';
+
+/** The project panel's refusal of `auto` as a model name (spec #19, "Model choice"). */
+// provisional: survey 19 §7 Q9 (`auto` is never a saved model name)
+export const PROJECT_AUTO_PROBLEM =
+  '\'auto\' is not a model name. Pick a model from the list, or choose "Use app default".';
