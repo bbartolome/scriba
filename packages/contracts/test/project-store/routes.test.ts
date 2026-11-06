@@ -42,6 +42,7 @@ describe('project-store route constants', () => {
       ['draftVersions', 'entityList', 'fileList', 'fileRead', 'list'].sort(),
     );
     expect(PROJECT_STORE_ROUTES.search.method).toBe('POST');
+    expect(PROJECT_STORE_ROUTES.searchRebuild.method).toBe('POST');
     expect(PROJECT_STORE_ROUTES.activate.method).toBe('POST');
     expect(PROJECT_STORE_ROUTES.fileWrite.method).toBe('POST');
   });

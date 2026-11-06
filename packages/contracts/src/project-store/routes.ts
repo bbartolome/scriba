@@ -5,8 +5,8 @@
  * "every request names projectId").
  *
  * The New and Start-from-sample routes name no project, because the folder does not exist yet. The
- * queue listing, the version read and restore, and the search rebuild are not in this slice. They
- * belong to the phases that build them (survey §3).
+ * queue listing and the version read and restore are not in this slice. They belong to the phases
+ * that build them (survey §3).
  */
 
 /** [proposed] prefix, pending #16 §7 item 18. */
@@ -47,6 +47,8 @@ export const PROJECT_STORE_ROUTES = {
   entityList: { method: 'GET', path: `${PROJECT_STORE_PROJECT_ROUTE}/entities` },
   /** POST. Keyword search over `sources/` and `entities/`. Body: `{query, limit?, scope?}`. */
   search: { method: 'POST', path: `${PROJECT_STORE_PROJECT_ROUTE}/search` },
+  /** POST. Rebuild the search index from scratch. Empty body. */
+  searchRebuild: { method: 'POST', path: `${PROJECT_STORE_PROJECT_ROUTE}/search/rebuild` },
   /** GET. Draft-version listing. Query: `draftPath`. */
   draftVersions: { method: 'GET', path: `${PROJECT_STORE_PROJECT_ROUTE}/versions` },
   /** POST. Accept a pending change, with optional edited `content`. */
