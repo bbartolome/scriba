@@ -56,12 +56,13 @@ describe('project.yaml schema', () => {
     );
     expect(ProjectYamlSchema.safeParse({ schemaVersion: 1, title: 'T' }).success).toBe(false);
     expect(
-      ProjectYamlSchema.safeParse({ ...MINIMAL, model: { providerId: 'openai' } }).success,
+      ProjectYamlSchema.safeParse({ ...MINIMAL, model: { providerId: 'fixture-provider' } })
+        .success,
     ).toBe(false);
     expect(
       ProjectYamlSchema.safeParse({
         ...MINIMAL,
-        model: { providerId: 'openai', model: 'gpt-test' },
+        model: { providerId: 'fixture-provider', model: 'fixture-model' },
       }).success,
     ).toBe(true);
   });

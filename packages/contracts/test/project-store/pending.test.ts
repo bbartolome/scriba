@@ -56,7 +56,7 @@ describe('pending change round trip', () => {
         tool: 'draft.write',
         entityIds: ['source-hbr-2019'],
         sourcesUsed: [{ id: 'source-hbr-2019', type: 'source', path: 'sources/hbr-2019.md' }],
-        model: 'local-model',
+        model: 'fixture-model',
         at: NOW,
       },
     };
