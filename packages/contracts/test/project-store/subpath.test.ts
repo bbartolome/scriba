@@ -36,14 +36,19 @@ describe('project-store subpath', () => {
     const files = readdirSync(DIST).filter((file) => file.endsWith('.js'));
     expect(files.length).toBeGreaterThan(0);
     const importPattern = /(?:import|export)\s+(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]/g;
+    const seen = new Set<string>();
     for (const file of files) {
       const source = readFileSync(join(DIST, file), 'utf8');
       const specifiers = [...source.matchAll(importPattern)].map((match) => match[1] ?? '');
       for (const specifier of specifiers) {
+        seen.add(specifier);
         const allowed = specifier === 'zod' || specifier.startsWith('./');
         expect(allowed, `${file} imports ${specifier}`).toBe(true);
       }
     }
+    // The scan must find the real imports, or the loop above would pass without checking anything.
+    expect(seen.has('zod')).toBe(true);
+    expect([...seen].some((specifier) => specifier.startsWith('./'))).toBe(true);
   });
 
   it('lists zod as the only runtime dependency of the package', () => {
