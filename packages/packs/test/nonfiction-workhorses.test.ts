@@ -15,7 +15,8 @@ import {
 // declares. The pack lint over every built-in pack is in pack-lint.test.ts.
 const PACKS_DIR = fileURLToPath(new URL('../', import.meta.url));
 
-/** The four M2 workhorse tools, by their snake_case names (survey 22 §7 O1, provisional). */
+// provisional: survey 22 §7 O1 (the workhorses are named snake_case; the spec's kebab-case names stay in prose)
+/** The four M2 workhorse tools, by their snake_case names. */
 const WORKHORSES = ['cold_open', 'mystery_question', 'myth_buster', 'numbers_to_people'] as const;
 
 /** The three nonfiction entity types. */
@@ -36,6 +37,7 @@ describe('phase:nonfiction-workhorses: the workhorse tools and types', () => {
       const kind = entityTypeEntryOf(file).entityType?.kind;
       if (kind !== undefined) kinds.add(kind);
     }
+    // provisional: survey 22 §7 O12 (an undeclared entity kind is an error in the built-in suite)
     const entries = (await readBuiltInTools(PACKS_DIR)).map((file) =>
       toolEntryOf(file, { knownKinds: kinds, strictKinds: true }),
     );

@@ -10,6 +10,7 @@ import { readBuiltInTools } from '../../../apps/api/src/modules/tool-registry/ca
 const PACKS_DIR = fileURLToPath(new URL('../', import.meta.url));
 
 const COMMON_INPUTS = ['coreIdea', 'entityIds', 'styleProfile', 'length', 'tone'] as const;
+// provisional: survey 22 §7 O1 (the workhorses are named snake_case; the spec's kebab-case names stay in prose)
 const WORKHORSES = ['cold_open', 'mystery_question', 'myth_buster', 'numbers_to_people'] as const;
 
 interface WorkhorseInputs {
@@ -24,6 +25,7 @@ async function workhorseInputs(): Promise<WorkhorseInputs[]> {
   const found: WorkhorseInputs[] = [];
   for (const file of files) {
     if (file.origin !== 'nonfiction') continue;
+    // provisional: survey 22 §7 O12 (an undeclared entity kind is an error in the built-in suite)
     const entry = toolEntryOf(file, {
       knownKinds: new Set(['person', 'claim']),
       strictKinds: true,

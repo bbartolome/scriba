@@ -17,6 +17,7 @@ import { readBuiltInEntityTypes } from '../src/modules/tool-registry/catalog/pac
 // test reads the repo's nonfiction sample, which is why it is exempt from the examples-read rule
 // (survey 22 §7 O14, recorded in eslint.config.mjs). It covers what the examples check does not: the
 // entity types, every reference and citation resolving to a file in the sample, and claim statuses.
+// provisional: survey 22 §7 O14 (the sample check's exemption is recorded by name in eslint.config.mjs)
 
 const SAMPLE = fileURLToPath(new URL('../../../examples/nonfiction/', import.meta.url));
 const PACKS_DIR = fileURLToPath(new URL('../../../packages/packs/', import.meta.url));
@@ -178,6 +179,7 @@ describe('phase:nonfiction-workhorses: the nonfiction sample', () => {
     }
   });
 
+  // provisional: survey 22 §7 O2 (the skeleton sources already carry the Source fields, so this module edits none)
   it('gives every skeleton source the Source front matter the entities cite', async () => {
     for (const source of await readFolder('sources')) {
       expect(source.type, source.file).toBe('source');
