@@ -1,6 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppVersionInfoSchema, HealthzResponseSchema } from '@bbartolome/scriba-contracts/platform';
-import { createTempLibrary, startApp, type RunningApp, type TempLibrary } from './support/app.js';
+import {
+  createTempLibrary,
+  startApp,
+  withSession,
+  type RunningApp,
+  type TempLibrary,
+} from './support/app.js';
 
 describe('GET /healthz and GET /api/platform/version', () => {
   let library: TempLibrary;
@@ -27,7 +33,7 @@ describe('GET /healthz and GET /api/platform/version', () => {
   });
 
   it('GET /api/platform/version returns the AppVersionInfo shape', async () => {
-    const response = await fetch(`${running.baseUrl}/api/platform/version`);
+    const response = await fetch(`${running.baseUrl}/api/platform/version`, withSession(running));
 
     expect(response.status).toBe(200);
     const body = AppVersionInfoSchema.parse(await response.json());

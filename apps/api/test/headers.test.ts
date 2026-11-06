@@ -25,7 +25,11 @@ describe('/events response headers', () => {
 
   it('sends Cache-Control exactly, no Content-Encoding, and no CORS headers', async () => {
     const stream = await SseClient.open(`${running.baseUrl}/events`, {
-      headers: { origin: 'https://client.example.test', 'accept-encoding': 'gzip' },
+      headers: {
+        cookie: running.cookie,
+        origin: 'https://client.example.test',
+        'accept-encoding': 'gzip',
+      },
     });
     try {
       const headers = stream.response.headers;

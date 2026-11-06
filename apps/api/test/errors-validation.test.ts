@@ -1,6 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { ApiErrorSchema } from '@bbartolome/scriba-contracts/platform';
-import { createTempLibrary, startApp, type RunningApp, type TempLibrary } from './support/app.js';
+import {
+  createTempLibrary,
+  startApp,
+  withSession,
+  type RunningApp,
+  type TempLibrary,
+} from './support/app.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json' };
 
@@ -19,11 +25,14 @@ describe('error shape and Zod validation pipe', () => {
   });
 
   it('an invalid body to a test controller returns PLATFORM_VALIDATION_FAILED in the base shape', async () => {
-    const response = await fetch(`${running.baseUrl}/api/test/validate`, {
-      method: 'POST',
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ count: 0, intervalMs: 5 }),
-    });
+    const response = await fetch(
+      `${running.baseUrl}/api/test/validate`,
+      withSession(running, {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ count: 0, intervalMs: 5 }),
+      }),
+    );
 
     expect(response.status).toBe(400);
     const body = ApiErrorSchema.parse(await response.json());
@@ -33,33 +42,42 @@ describe('error shape and Zod validation pipe', () => {
   });
 
   it('a validation failure does not echo the rejected input values', async () => {
-    const response = await fetch(`${running.baseUrl}/api/test/validate`, {
-      method: 'POST',
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ count: 98765, intervalMs: 5 }),
-    });
+    const response = await fetch(
+      `${running.baseUrl}/api/test/validate`,
+      withSession(running, {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ count: 98765, intervalMs: 5 }),
+      }),
+    );
 
     expect(response.status).toBe(400);
     expect(await response.text()).not.toContain('98765');
   });
 
   it('a valid body passes through the pipe unchanged', async () => {
-    const response = await fetch(`${running.baseUrl}/api/test/validate`, {
-      method: 'POST',
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ count: 3, intervalMs: 500 }),
-    });
+    const response = await fetch(
+      `${running.baseUrl}/api/test/validate`,
+      withSession(running, {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ count: 3, intervalMs: 500 }),
+      }),
+    );
 
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual({ count: 3, intervalMs: 500 });
   });
 
   it('a malformed JSON body returns 400 in the base shape', async () => {
-    const response = await fetch(`${running.baseUrl}/api/test/validate`, {
-      method: 'POST',
-      headers: JSON_HEADERS,
-      body: '{not json',
-    });
+    const response = await fetch(
+      `${running.baseUrl}/api/test/validate`,
+      withSession(running, {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: '{not json',
+      }),
+    );
 
     expect(response.status).toBe(400);
     expect(ApiErrorSchema.parse(await response.json()).error.code).toBe(
@@ -84,11 +102,14 @@ describe('error shape and Zod validation pipe', () => {
   });
 
   it('an oversized body returns 413 PLATFORM_PAYLOAD_TOO_LARGE', async () => {
-    const response = await fetch(`${running.baseUrl}/api/test/validate`, {
-      method: 'POST',
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ count: 1, intervalMs: 1, padding: 'x'.repeat(200_000) }),
-    });
+    const response = await fetch(
+      `${running.baseUrl}/api/test/validate`,
+      withSession(running, {
+        method: 'POST',
+        headers: JSON_HEADERS,
+        body: JSON.stringify({ count: 1, intervalMs: 1, padding: 'x'.repeat(200_000) }),
+      }),
+    );
 
     expect(response.status).toBe(413);
     expect(ApiErrorSchema.parse(await response.json()).error.code).toBe(
@@ -97,7 +118,7 @@ describe('error shape and Zod validation pipe', () => {
   });
 
   it('an unexpected error returns PLATFORM_INTERNAL with no stack and no internal message', async () => {
-    const response = await fetch(`${running.baseUrl}/api/test/boom`);
+    const response = await fetch(`${running.baseUrl}/api/test/boom`, withSession(running));
 
     expect(response.status).toBe(500);
     const text = await response.text();

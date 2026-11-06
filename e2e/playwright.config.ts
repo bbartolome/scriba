@@ -72,7 +72,13 @@ export default defineConfig({
       command: 'node apps/api/dist/main.js',
       cwd: REPO_ROOT,
       url: `http://127.0.0.1:${API_PORT}/healthz`,
-      env: { SCRIBA_PORT: String(API_PORT), SCRIBA_BOOKS_DIR: booksDir },
+      // The dev server's Host is the web port, which the proxy forwards unchanged (changeOrigin is
+      // false), so the API admits it as a dev pair (survey 16 §7 item 10, provisional).
+      env: {
+        SCRIBA_PORT: String(API_PORT),
+        SCRIBA_BOOKS_DIR: booksDir,
+        SCRIBA_DEV_ORIGINS: `127.0.0.1:${WEB_PORT},localhost:${WEB_PORT}`,
+      },
       reuseExistingServer: false,
       gracefulShutdown: { signal: 'SIGTERM', timeout: 10_000 },
       timeout: 60_000,

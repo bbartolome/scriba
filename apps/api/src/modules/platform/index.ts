@@ -16,8 +16,8 @@ import { staticServeOptions } from './static/static.js';
 
 /**
  * The Platform module. The composition root imports this and nothing else. Its `/healthz` is
- * public, and its `/api/platform/...` routes and `/events` are unguarded until Setup & auth adds
- * the guard.
+ * public. Its `/api/platform/...` routes and `/events` need a session, which Setup & auth's global
+ * guard checks.
  */
 @Module({
   imports: [ServeStaticModule.forRoot(staticServeOptions())],
@@ -44,6 +44,7 @@ export class PlatformModule {
 
 /** Helpers for other modules. They are imported from this index, not from the internal folders. */
 export { registerBootStep, type BootStep, type BootContext } from './boot/boot-steps.js';
+export { APP_STATE_DIR } from './boot/app-state.js';
 export {
   STREAM_PUBLISHER_OPTIONS,
   StreamPublisher,
