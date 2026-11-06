@@ -23,7 +23,11 @@ import { signIn, withSession } from '../support/app.js';
 import { FIXTURE_PROJECT } from './fixture-catalog.js';
 
 // The Platform mock is used as it is, read from the e2e tree. Nothing is added there: each test's
-// scenarios are built in code and validated by the mock's own parser. // provisional: survey 21 §7 item 5
+// scenarios are built in code and validated by the mock's own parser. The plain-completion scenario
+// is not added to e2e/fixtures/mock-openai/scenarios/ (a shared e2e step, not added here).
+// provisional: survey 21 §7 item 5
+// The mock is Platform's (phase:test-harness, on main). The executor gates on it, as item 17 records.
+// provisional: survey 21 §7 item 17
 
 /** The root module: Platform, Setup & auth for the guard, Model providers, and the executor. */
 export function rootModuleFor(source: ToolSource): new () => object {
