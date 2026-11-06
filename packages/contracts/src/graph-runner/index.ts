@@ -11,3 +11,5 @@
 export * from './vocabulary.js';
 export * from './common.js';
 export * from './graph.js';
+export * from './validation.js';
+export * from './graphs.js';
