@@ -45,3 +45,29 @@ export const SetupStatusSchema = z
     path: ['steps', 'access'],
   });
 export type SetupStatus = z.infer<typeof SetupStatusSchema>;
+
+/**
+ * Setup-status update: the PATCH body (survey 18 §3, "setup-status endpoints"). It is a field-level
+ * merge: each step named in `steps` takes the given state, and `complete` sets the overall flag when
+ * it is present. Nothing else changes. [proposed] The method and body are the survey's choice; the
+ * spec gives the states and the skip rule only.
+ */
+export const SetupStatusUpdateSchema = z
+  .strictObject({
+    steps: z
+      .strictObject({
+        access: SetupStepStateSchema,
+        tailscale: SetupStepStateSchema,
+        providers: SetupStepStateSchema,
+        preferences: SetupStepStateSchema,
+        firstProject: SetupStepStateSchema,
+      })
+      .partial(),
+    complete: z.boolean(),
+  })
+  .partial()
+  .refine((update) => update.steps?.access !== 'skipped', {
+    message: 'the access step cannot be skipped',
+    path: ['steps', 'access'],
+  });
+export type SetupStatusUpdate = z.infer<typeof SetupStatusUpdateSchema>;

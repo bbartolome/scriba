@@ -9,8 +9,11 @@
  * checks.
  */
 export const SETUP_AUTH_ROUTES = {
-  /** Setup status: per-step state, `complete` and the compose-version status. */
-  setupStatus: { path: '/api/setup-auth/setup-status', methods: ['GET'] },
+  /**
+   * Setup status: per-step state, `complete` and the compose-version status. PATCH is a field-level
+   * merge of the step states and the overall flag (survey 18 §3, setup-flow).
+   */
+  setupStatus: { path: '/api/setup-auth/setup-status', methods: ['GET', 'PATCH'] },
   /**
    * Token handshake. The setup URL points here, with the token as a query parameter. The route is
    * public (no credential), but it still passes the Host check.
