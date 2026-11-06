@@ -48,6 +48,10 @@ jobs:
       - name: Pack lint
         run: npm run pack-lint
 
+      # provisional: survey 16 §7 item 5 (the check also runs inside Lint, which builds first; this step sits next to pack-lint)
+      - name: Examples check
+        run: npm run examples-check
+
       - name: Install Playwright Chromium
         run: npm run install:browsers -w @bbartolome/scriba-e2e
 
