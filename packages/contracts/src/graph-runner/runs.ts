@@ -7,11 +7,7 @@ import {
 } from '../project-store/index.js';
 import { ExecuteResponseSchema } from '../tool-registry/index.js';
 import { GraphIdSchema, NodeIdSchema, RunIdSchema } from './common.js';
-import {
-  GraphRunEndReasonSchema,
-  NodeRunStatusSchema,
-  RunStatusSchema,
-} from './vocabulary.js';
+import { GraphRunEndReasonSchema, NodeRunStatusSchema, RunStatusSchema } from './vocabulary.js';
 
 /**
  * Run requests, input values, node results and run state (spec, "Run engine", "Contracts" and

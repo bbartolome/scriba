@@ -15,3 +15,7 @@ export * from './validation.js';
 export * from './graphs.js';
 export * from './runs.js';
 export * from './origin.js';
+export * from './errors.js';
+export * from './routes.js';
+export * from './events.js';
+export * from './run-log.js';
