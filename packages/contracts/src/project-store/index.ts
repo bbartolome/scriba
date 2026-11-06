@@ -7,3 +7,5 @@ export * from './pending.js';
 export * from './files.js';
 export * from './search.js';
 export * from './versions.js';
+export * from './events.js';
+export * from './routes.js';
