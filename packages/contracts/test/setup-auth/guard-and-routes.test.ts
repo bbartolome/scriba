@@ -57,7 +57,12 @@ describe('mutation set (invariants)', () => {
     const mutating = ROUTES.flatMap(([name, route]) =>
       route.methods.filter(isMutation).map((method) => `${name} ${method}`),
     ).sort();
-    expect(mutating).toEqual(['allowlist PATCH', 'preferences PATCH', 'signOut POST']);
+    expect(mutating).toEqual([
+      'allowlist PATCH',
+      'preferences PATCH',
+      'setupStatus PATCH',
+      'signOut POST',
+    ]);
   });
 
   it('never lets GET or HEAD be a mutation method', () => {

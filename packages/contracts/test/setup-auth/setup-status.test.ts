@@ -5,6 +5,7 @@ import {
   SETUP_STEP_IDS,
   SETUP_STEP_STATES,
   SetupStatusSchema,
+  SetupStatusUpdateSchema,
 } from '../../src/setup-auth/index.js';
 import {
   COMPOSE_MISMATCH,
@@ -50,6 +51,35 @@ describe('setup status', () => {
     expect(SetupStatusSchema.safeParse({ ...SETUP_STATUS_FRESH, complete: 'yes' }).success).toBe(
       false,
     );
+  });
+});
+
+describe('setup status update (PATCH body)', () => {
+  it('accepts a single step, a set of steps, the overall flag, and an empty merge', () => {
+    expect(SetupStatusUpdateSchema.safeParse({ steps: { tailscale: 'skipped' } }).success).toBe(
+      true,
+    );
+    expect(
+      SetupStatusUpdateSchema.safeParse({
+        steps: { providers: 'skipped', preferences: 'done' },
+        complete: true,
+      }).success,
+    ).toBe(true);
+    expect(SetupStatusUpdateSchema.safeParse({ complete: true }).success).toBe(true);
+    expect(SetupStatusUpdateSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('rejects skipping the access step, and a state outside the enum', () => {
+    expect(SetupStatusUpdateSchema.safeParse({ steps: { access: 'skipped' } }).success).toBe(false);
+    expect(SetupStatusUpdateSchema.safeParse({ steps: { tailscale: 'complete' } }).success).toBe(
+      false,
+    );
+  });
+
+  it('rejects an unknown step name, a non-boolean complete, and any unknown key', () => {
+    expect(SetupStatusUpdateSchema.safeParse({ steps: { welcome: 'done' } }).success).toBe(false);
+    expect(SetupStatusUpdateSchema.safeParse({ complete: 'yes' }).success).toBe(false);
+    expect(SetupStatusUpdateSchema.safeParse({ compose: { state: 'ok' } }).success).toBe(false);
   });
 });
 

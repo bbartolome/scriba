@@ -52,6 +52,19 @@ describe('ApiClient over the HTTP transport', () => {
     http.verify();
   });
 
+  it('sends a field-level merge as PATCH with the JSON body, and parses the answer', async () => {
+    const pending = settle(
+      client.patch('/api/setup-auth/preferences', { theme: 'dark' }, HealthzResponseSchema),
+    );
+
+    const request = http.expectOne('/api/setup-auth/preferences');
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ theme: 'dark' });
+    request.flush(JSON.stringify({ status: 'ok', version: '1.4.0' }));
+
+    expect(await pending).toEqual({ value: { status: 'ok', version: '1.4.0' } });
+  });
+
   it('returns parsed data for a valid response', async () => {
     const pending = settle(client.get('/healthz', HealthzResponseSchema));
 

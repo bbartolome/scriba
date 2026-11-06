@@ -9,8 +9,9 @@ import { ApiTransport, type HttpMethod, type TransportResponse } from './api-tra
 
 /**
  * The typed API client every feature uses. Reads are GET and commands are POST (spec #4). The
- * client has no GET-with-side-effects helper. Each caller passes the Zod schema for its response
- * from its own contract slice. The client parses the response and fails loudly on a mismatch.
+ * client has no GET-with-side-effects helper. A field-level merge is PATCH, which only the setup-auth
+ * contract's writes use (survey 18 §3). Each caller passes the Zod schema for its response from its
+ * own contract slice. The client parses the response and fails loudly on a mismatch.
  */
 @Injectable({ providedIn: 'root' })
 export class ApiClient {
@@ -23,6 +24,10 @@ export class ApiClient {
 
   post<T>(path: string, body: unknown, schema: ZodType<T>): Observable<T> {
     return this.request('POST', path, body, schema);
+  }
+
+  patch<T>(path: string, body: unknown, schema: ZodType<T>): Observable<T> {
+    return this.request('PATCH', path, body, schema);
   }
 
   private request<T>(

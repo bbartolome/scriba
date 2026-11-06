@@ -60,16 +60,22 @@ export const routes: Routes = [
       import('./features/tool-registry').then((feature) => feature.TOOL_REGISTRY_FEATURE_ROUTES),
     minClass: 'tablet',
   }),
-  // Provider settings (survey 19 §3, phase:settings-ui). Phones reach it to switch the app default.
+  // provisional: survey 18 §7 item 9 (the settings route is /settings; the Shell confirms it)
+  // The settings page (survey 18 §3, setup-flow): identity, preferences, the Model providers panel
+  // (survey 19 §3), versions, the compose warning, recovery, re-run and sign out. Phones reach it
+  // from the nav.
   featureRoute({
     path: 'settings',
-    load: () => import('./features/providers').then((feature) => feature.PROVIDERS_SETTINGS_ROUTES),
+    load: () =>
+      import('./features/setup-auth/settings/settings.routes').then(
+        (feature) => feature.SETUP_SETTINGS_ROUTES,
+      ),
     nav: { label: 'Settings', icon: 'settings', order: 20 },
     minClass: 'phone',
   }),
   { path: 'larger-screen', component: LargerScreenPage },
-  // The setup link lands here (survey 18, the handshake). It has no nav entry: the setup steps are a
-  // later phase, and the link only has to reach this page.
+  // The setup link lands here (survey 18, the handshake), and so does a 401 from any call. The wizard
+  // has no nav entry: the author reaches it from the link, the landing page, or the settings re-run.
   {
     path: 'setup',
     loadChildren: () =>

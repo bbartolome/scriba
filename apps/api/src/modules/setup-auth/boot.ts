@@ -3,7 +3,7 @@ import { Logger } from '@nestjs/common';
 import { SETUP_AUTH_ROUTES } from '@bbartolome/scriba-contracts/setup-auth';
 import { type BootContext, APP_STATE_DIR, registerBootStep } from '../platform/index.js';
 import { loadOrCreateSetupToken, writeSetupUrl } from './token/setup-token.js';
-import { setCurrentSetupToken } from './state.js';
+import { setCurrentSetupToken, setSetupLibrary } from './state.js';
 
 const logger = new Logger('SetupAuth');
 
@@ -22,6 +22,7 @@ export function setupUrl(port: number, token: string): string {
  */
 export async function setupAuthBoot({ config }: BootContext): Promise<void> {
   const stateDir = join(config.booksDir, APP_STATE_DIR);
+  setSetupLibrary(config.booksDir);
   const token = loadOrCreateSetupToken(stateDir);
   setCurrentSetupToken(token);
   const url = setupUrl(config.port, token);
