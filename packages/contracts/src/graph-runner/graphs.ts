@@ -79,8 +79,9 @@ export type DeleteGraphResponse = z.infer<typeof DeleteGraphResponseSchema>;
 
 /**
  * `POST /api/graphs/validate`: the rules run on a graph the canvas holds, saved or not. The canvas
- * sends its current graph file for a debounced full check (survey 24 §4 and §7 Q6).
+ * sends its current graph file for a debounced full check (survey 24 §4).
  */
+// provisional: survey 24 §7 Q6
 export const ValidateGraphRequestSchema = GraphFileSchema;
 export type ValidateGraphRequest = z.infer<typeof ValidateGraphRequestSchema>;
 
