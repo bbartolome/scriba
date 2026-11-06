@@ -21,4 +21,8 @@ Constraints:
 - Reply with the JSON object only.
 
 Tools on offer (name | description | ports | output):
+- cold_open | Open mid-scene with one person at one moment, then pull back to the idea. | ports: coreIdea (text), entityIds (entity), styleProfile (style), person (entity), moment (text) | output: draft
+- mystery_question | Open with a puzzle, then unravel it to a surprising finding. | ports: coreIdea (text), entityIds (entity), styleProfile (style), puzzle (text), surprisingFinding (text) | output: draft
+- myth_buster | State a common belief, then take it apart with evidence. | ports: coreIdea (text), entityIds (entity), styleProfile (style), belief (text), claimIds (entity) | output: draft
+- numbers_to_people | Turn one statistic into the story of one person behind it. | ports: coreIdea (text), entityIds (entity), styleProfile (style), statistic (text), person (entity) | output: draft
 - propose_graph | Sketch a story graph or a recipe from a plain-language intent. | ports: intent (text), entityIds (entity) | output: graph
