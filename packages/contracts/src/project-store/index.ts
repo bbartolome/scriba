@@ -3,3 +3,7 @@ export * from './errors.js';
 export * from './entities.js';
 export * from './project-yaml.js';
 export * from './projects.js';
+export * from './pending.js';
+export * from './files.js';
+export * from './search.js';
+export * from './versions.js';
