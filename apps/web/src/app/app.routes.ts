@@ -36,6 +36,14 @@ export const routes: Routes = [
     nav: { label: 'Projects', icon: 'folder', order: 5 },
     minClass: 'phone',
   }),
+  // The agent chat for one project. It has no nav entry: the chat opens from a project's route.
+  featureRoute({
+    path: 'projects/:projectId/chat',
+    load: () =>
+      import('./features/agent-loop').then((feature) => feature.AGENT_LOOP_FEATURE_ROUTES),
+    minClass: 'phone',
+    scope: 'project',
+  }),
   // The Tools dev preview has no nav entry yet. The editor phase adds it to the nav (survey 21 §3).
   featureRoute({
     path: 'tools',

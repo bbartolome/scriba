@@ -1,4 +1,4 @@
-import { mkdir, readFile, stat } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, stat } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { Injectable } from '@nestjs/common';
 import type {
@@ -85,6 +85,24 @@ function assertNotTooNew(bytes: Uint8Array): void {
       { schemaVersion: reading.schemaVersion },
     );
   }
+}
+
+/** The folder the app writes its own records to. Nothing outside it is a log path. */
+const LOG_FOLDER = 'logs';
+
+/**
+ * Guards a path for the app's own records. The path must name a file inside `logs/`, and the same
+ * containment and reserved-name checks as every other path apply.
+ */
+async function guardLogPath(project: ProjectLocation, input: unknown): Promise<GuardedPath> {
+  const rel = normalizeRelativePath(input);
+  if (rel.split('/')[0] !== LOG_FOLDER || rel === LOG_FOLDER) {
+    throw projectError(
+      'PROJECT_VALIDATION_FAILED',
+      'The app writes its own records only under logs/.',
+    );
+  }
+  return guardProjectPath(project, rel);
 }
 
 /**
@@ -241,6 +259,32 @@ export class FileApiService {
       const at = text.indexOf(request.old);
       return text.slice(0, at) + request.new + text.slice(at + request.old.length);
     });
+  }
+
+  /**
+   * Appends text to a file under `logs/`, the app's own records (survey 23 §1: the loop writes
+   * directly only to `logs/`). The file API's text allowlist does not cover `.jsonl`, so the log
+   * path is separate. Only `logs/` paths are accepted, and the same path guard applies.
+   */
+  async appendLog(project: ProjectLocation, input: unknown, text: string): Promise<void> {
+    const guarded = await guardLogPath(project, input);
+    await this.locks.run(`append:${guarded.realPath}`, async () => {
+      await mkdir(dirname(guarded.realPath), { recursive: true });
+      await appendFile(guarded.realPath, text, 'utf8');
+    });
+  }
+
+  /** Reads a file under `logs/`. A file that is not there is undefined. Reads never write. */
+  async readLog(project: ProjectLocation, input: unknown): Promise<string | undefined> {
+    const guarded = await guardLogPath(project, input);
+    if (!guarded.exists) {
+      return undefined;
+    }
+    const info = await stat(guarded.realPath);
+    if (info.isDirectory()) {
+      throw projectError('PROJECT_NOT_FOUND', 'That path is a folder, not a file.');
+    }
+    return readFile(guarded.realPath, 'utf8');
   }
 
   /**
