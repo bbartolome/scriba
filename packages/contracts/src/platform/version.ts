@@ -12,7 +12,8 @@ export const SemverSchema = z.string().regex(SEMVER_PATTERN);
 
 /**
  * App version info, returned by `GET /api/platform/version` (guarded).
- * Types only in this package: the runtime values are baked in at build time and come in s3.
+ * Types only in this package. In phase:scaffold, apps/api computes the values at runtime. Build-arg
+ * baking of the version, revision and build time is deferred to phase:ci-publish.
  */
 export const AppVersionInfoSchema = z.object({
   version: SemverSchema,
