@@ -13,6 +13,7 @@ export type ThemeChoice = 'device' | 'light' | 'dark';
  * The app-wide default, from the author's preferences in `settings.yaml` (survey 18 §7 item 14,
  * provisional). `system` follows the OS, as `device` does.
  */
+// provisional: survey 18 §7 item 14
 export type AppThemeDefault = 'system' | 'light' | 'dark';
 
 /** The one preference the Shell reads: the theme. The rest of the preferences belong to setup-auth. */

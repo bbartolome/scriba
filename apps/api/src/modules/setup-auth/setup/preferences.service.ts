@@ -27,6 +27,7 @@ export class PreferencesService {
    * Saves the fields the update names and leaves the others. A genre pack must be one the Tool
    * registry loads (survey 18 §7 item 10, provisional). The check runs before anything is written.
    */
+  // provisional: survey 18 §7 item 10
   async update(update: PreferencesUpdate): Promise<Preferences> {
     const pack = update.defaultGenrePack;
     if (pack !== undefined && pack !== null && !GenrePackNameSchema.safeParse(pack).success) {
