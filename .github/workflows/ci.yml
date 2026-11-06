@@ -45,6 +45,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Pack lint
+        run: npm run pack-lint
+
       - name: Install Playwright Chromium
         run: npm run install:browsers -w @bbartolome/scriba-e2e
 
