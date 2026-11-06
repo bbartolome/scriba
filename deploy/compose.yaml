@@ -1,0 +1,51 @@
+# Scriba's compose file (survey 16 §3, phase:image-compose). Two services: the app, and the
+# Tailscale sidecar that serves its LocalAPI socket. The app reaches the socket through a shared
+# volume at /var/run/tailscale, as the survey requires.
+#
+# The app's port is published on 127.0.0.1 only, so no other host interface reaches it.
+# Owner-only: the sidecar needs /dev/net/tun and NET_ADMIN on a real host (survey 16 §3, acceptance).
+
+name: scriba
+
+services:
+  scriba:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: ${SCRIBA_IMAGE:-bbartolome/scriba:dev}
+    init: true
+    restart: unless-stopped
+    user: '${SCRIBA_UID:-1000}:${SCRIBA_GID:-1000}'
+    environment:
+      SCRIBA_PORT: ${SCRIBA_PORT:-8080}
+      SCRIBA_BOOKS_DIR: /books
+      SCRIBA_TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      SCRIBA_COMPOSE_VERSION: ${SCRIBA_COMPOSE_VERSION:-dev}
+    ports:
+      - '127.0.0.1:${SCRIBA_PORT:-8080}:${SCRIBA_PORT:-8080}'
+    volumes:
+      - ${SCRIBA_LIBRARY:-./books}:/books
+      - tailscale-socket:/var/run/tailscale
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    depends_on:
+      - tailscale
+
+  tailscale:
+    image: tailscale/tailscale:stable
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SOCKET: /var/run/tailscale/tailscaled.sock
+      TS_AUTHKEY: ${TS_AUTHKEY:-}
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - tailscale-socket:/var/run/tailscale
+
+volumes:
+  tailscale-state:
+  tailscale-socket:
