@@ -30,5 +30,14 @@ export const routes: Routes = [
     minClass: 'tablet',
   }),
   { path: 'larger-screen', component: LargerScreenPage },
+  // The setup link lands here (survey 18, the handshake). It has no nav entry: the setup steps are a
+  // later phase, and the link only has to reach this page.
+  {
+    path: 'setup',
+    loadChildren: () =>
+      import('./features/setup-auth/setup-auth.routes').then(
+        (feature) => feature.SETUP_AUTH_ROUTES,
+      ),
+  },
   { path: '**', component: NotFoundPage },
 ];
