@@ -207,7 +207,8 @@ export class AgentRunService implements OnModuleInit {
         message = this.readableMessage(error);
       }
     }
-    // The slot is released however the end is written, so a failed write cannot block the project.
+    // The end line is written before `run-ended` is published, so a client that reads the transcript on
+    // that event finds it complete. The slot is released however the end is written.
     try {
       const seq = live.nextSeq();
       this.record(live, seq, 'run-end', {
@@ -215,6 +216,7 @@ export class AgentRunService implements OnModuleInit {
         pendingChangeIds: [],
         ...(message === undefined ? {} : { message }),
       });
+      await live.drain();
       this.send(live, {
         module: 'agent-loop',
         type: 'run-ended',
@@ -226,7 +228,6 @@ export class AgentRunService implements OnModuleInit {
           ...(message === undefined ? {} : { message }),
         },
       });
-      await live.drain();
     } finally {
       this.registry.release(live.projectId);
     }
