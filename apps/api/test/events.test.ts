@@ -13,7 +13,13 @@ import {
   MAX_QUEUED_BYTES,
   StreamPublisher,
 } from '../src/modules/platform/events/publisher.js';
-import { createTempLibrary, startApp, type RunningApp, type TempLibrary } from './support/app.js';
+import {
+  createTempLibrary,
+  startApp,
+  withSession,
+  type RunningApp,
+  type TempLibrary,
+} from './support/app.js';
 import { SseClient } from './support/sse-client.js';
 
 /** Short enough that a heartbeat shows up inside a test. */
@@ -26,12 +32,15 @@ function echoSeq(envelope: PlatformEnvelope): number {
   return envelope.data.seq;
 }
 
-async function postEcho(baseUrl: string, body: unknown): Promise<Response> {
-  return fetch(`${baseUrl}/api/platform/echo`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+async function postEcho(running: RunningApp, body: unknown): Promise<Response> {
+  return fetch(
+    `${running.baseUrl}/api/platform/echo`,
+    withSession(running, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  );
 }
 
 describe('GET /events over the live app', () => {
@@ -40,7 +49,9 @@ describe('GET /events over the live app', () => {
   const streams: SseClient[] = [];
 
   async function open(headers?: Record<string, string>): Promise<SseClient> {
-    const stream = await SseClient.open(`${running.baseUrl}/events`, { headers });
+    const stream = await SseClient.open(`${running.baseUrl}/events`, {
+      headers: { cookie: running.cookie, ...headers },
+    });
     streams.push(stream);
     return stream;
   }
@@ -94,7 +105,7 @@ describe('GET /events over the live app', () => {
       await stream.nextEnvelope();
     }
 
-    const response = await postEcho(running.baseUrl, { count: 3, intervalMs: 0 });
+    const response = await postEcho(running, { count: 3, intervalMs: 0 });
     expect(response.status).toBe(202);
     expect(await response.json()).toEqual({ accepted: 3 });
 
@@ -112,7 +123,7 @@ describe('GET /events over the live app', () => {
     const stream = await open();
     await stream.nextEnvelope();
 
-    const response = await postEcho(running.baseUrl, { count: 3, intervalMs: 100 });
+    const response = await postEcho(running, { count: 3, intervalMs: 100 });
     expect(response.status).toBe(202);
 
     const started = performance.now();
@@ -128,7 +139,7 @@ describe('GET /events over the live app', () => {
   });
 
   it('rejects an echo request outside the bounds with PLATFORM_VALIDATION_FAILED', async () => {
-    const response = await postEcho(running.baseUrl, { count: 0, intervalMs: 0 });
+    const response = await postEcho(running, { count: 0, intervalMs: 0 });
 
     expect(response.status).toBe(400);
     expect(ApiErrorSchema.parse(await response.json()).error.code).toBe(
