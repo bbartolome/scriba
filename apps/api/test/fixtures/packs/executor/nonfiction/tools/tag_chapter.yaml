@@ -1,0 +1,17 @@
+schemaVersion: 1
+name: tag_chapter
+description: Tag the claims in a chapter.
+inputs:
+  type: object
+  properties:
+    chapter:
+      type: string
+      title: Chapter
+      x-scriba-type: text
+      x-scriba-port: true
+  required: [chapter]
+  additionalProperties: false
+output: claims
+enabled: true
+prompt: |-
+  Tag the claims in {{chapter}}.

@@ -1,0 +1,23 @@
+schemaVersion: 1
+name: check_claims
+description: Check the claims for a chapter.
+inputs:
+  type: object
+  properties:
+    claims:
+      type: array
+      title: Claims to check
+      items:
+        type: string
+      x-scriba-type: entity
+      x-scriba-entity-kinds: [claim]
+      x-scriba-port: true
+  required: [claims]
+  additionalProperties: false
+output: check
+enabled: true
+prompt: |-
+  Check each claim for support in its source.
+  {{#each claims}}
+  {{entity this}}
+  {{/each}}
