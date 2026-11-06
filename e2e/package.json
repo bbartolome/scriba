@@ -1,0 +1,21 @@
+{
+  "name": "@bbartolome/scriba-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "e2e": "npm run build && playwright test",
+    "install:browsers": "playwright install --with-deps chromium",
+    "mock:openai": "npm run build && node dist/fixtures/mock-openai/cli.js"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@types/node": "24.19.2",
+    "openai": "7.53.0"
+  }
+}

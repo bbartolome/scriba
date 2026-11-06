@@ -1,0 +1,12 @@
+{
+  "name": "delayed-text",
+  "description": "Waits 300 ms, then answers with a short text.",
+  "steps": [
+    {
+      "respond": [
+        { "type": "delay", "ms": 300 },
+        { "type": "content", "deltas": ["Done."] }
+      ]
+    }
+  ]
+}

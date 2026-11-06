@@ -1,0 +1,22 @@
+{
+  "name": "status-429",
+  "description": "Every chat request is refused with 429 and a Retry-After header.",
+  "steps": [
+    {
+      "respond": [
+        {
+          "type": "status",
+          "status": 429,
+          "headers": { "Retry-After": "7" },
+          "body": {
+            "error": {
+              "message": "Rate limit reached",
+              "type": "rate_limit_error",
+              "code": "rate_limit_exceeded"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

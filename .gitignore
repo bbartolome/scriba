@@ -7,6 +7,10 @@ coverage/
 # Repo-local book libraries used in dev
 .scratch-books/
 
+# Playwright output: traces and reports from e2e runs
+e2e/test-results/
+e2e/playwright-report/
+
 # Per-user Claude Code settings. Shared project settings belong in .claude/settings.json.
 .claude/settings.local.json
 

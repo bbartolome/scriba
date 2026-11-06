@@ -1,0 +1,12 @@
+{
+  "name": "hold-until-disconnect",
+  "description": "Streams the first delta, then holds the connection open until the client disconnects.",
+  "steps": [
+    {
+      "respond": [
+        { "type": "content", "deltas": ["Working..."] },
+        { "type": "hold", "maxMs": 15000 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "tool-call",
+  "description": "A streamed read_file tool call whose arguments are split across chunks, then a text answer once the tool result is sent. Lists no models.",
+  "steps": [
+    {
+      "match": { "endpoint": "models" },
+      "respond": [{ "type": "models", "ids": [] }]
+    },
+    {
+      "match": { "turn": 0 },
+      "respond": [
+        {
+          "type": "tool-call",
+          "id": "call_read_1",
+          "name": "read_file",
+          "argumentChunks": ["{\"pa", "th\": \"chapter-1.md\"", "}"]
+        }
+      ]
+    },
+    {
+      "match": { "hasToolResult": true },
+      "respond": [{ "type": "content", "deltas": ["Chapter 1 ", "reads well."] }]
+    }
+  ]
+}
