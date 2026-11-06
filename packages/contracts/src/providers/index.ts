@@ -6,3 +6,4 @@ export * from './connection-test.js';
 export * from './errors.js';
 export * from './section.js';
 export * from './examples.js';
+export * from './api.js';

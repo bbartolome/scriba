@@ -8,8 +8,9 @@ import { ProviderError } from './errors.js';
 /**
  * The client interface (spec #19, "Client interface"). It is in-process: the Agent loop and the
  * Tool registry inject it under `PROVIDER_CLIENT`, and the SDK stays behind it. These types are not
- * part of the `/providers` HTTP contract slice (spec, Further Notes). The real implementation
- * arrives in `phase:client`, and the fake in `./fake-provider-client.ts` stands in until then.
+ * part of the `/providers` HTTP contract slice (spec, Further Notes). The implementation is
+ * `ProviderClientService`, bound under `PROVIDER_CLIENT`. The fake in `./fake-provider-client.ts`
+ * is for consumers' tests.
  */
 
 /**
