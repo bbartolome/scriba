@@ -1,0 +1,67 @@
+schemaVersion: 1
+name: undeclared_input
+description: Sketch a story graph or a recipe from a plain-language intent.
+inputs:
+  type: object
+  properties:
+    intent:
+      type: string
+      title: Intent
+      description: The plain-language sketch to turn into a graph.
+      minLength: 1
+      x-scriba-type: text
+      x-scriba-port: true
+    view:
+      type: string
+      title: View
+      description: Which graph to propose.
+      enum: [story, recipe]
+    entityIds:
+      type: array
+      title: Entities
+      description: Entities and sources the graph may refer to, by ID.
+      items:
+        type: string
+      uniqueItems: true
+      x-scriba-type: entity
+      x-scriba-port: true
+    files:
+      type: array
+      title: Files
+      description: Project-relative paths the graph may refer to.
+      items:
+        type: string
+      uniqueItems: true
+  required: [intent, view]
+  additionalProperties: false
+output: graph
+enabled: true
+prompt: |
+  You sketch one Scriba graph from the author's intent. Reply with the graph only.
+
+  Intent: {{intent}}
+  Requested view: {{view}}
+  Notes: {{notes}}
+
+  Material. Each entity is shown with its ID and its path in brackets.
+  {{#each entityIds}}
+  {{entity this}}
+  {{/each}}
+  Project files, by path:
+  {{#each files}}
+  - {{this}}
+  {{/each}}
+
+  The graph is one JSON object: {"schemaVersion": 1, "view": "<story or recipe>", "name": "<short title>", "nodes": [...], "edges": [...]}.
+
+  Story view: each node has "id" (lowercase letters, digits and hyphens), "kind" (entity, scene or beat), "label" and "position" ({"x": number, "y": number}), and a "path" only when it points at a file. Each edge has "id", "from" and "to" (node IDs) and "relation" (free text; use order, causality or containment where they fit). A scene node takes its path from the project files above. An entity node takes its path from the entity header above. A beat with no file has no path.
+
+  Recipe view: each node has "id", "kind" (input, tool or output) and "position". An input node has "params" with "type" (text, entity or style) and "label", and for entity it may add "entityKind". A tool node has "tool" (a name from the list below) and may have "params" for settings that are not ports. An output node may have "params": {"label": "..."}. Each edge is a wire with "id", "from" and "to", where each end is a port ID "<nodeId>.<key>". An input node's port is "<id>.out", a tool node's output port is "<id>.output" and its input ports are the keys listed below, and an output node's port is "<id>.in". Connect each input port at most once, and connect only ports of the same type.
+
+  Constraints:
+  - Use only the intent, the entities and the project files above. Do not invent a path, an ID, a tool, a port or a fact.
+  - In recipe view, use only the tools listed below, with their names and port keys exactly as written.
+  - Reply with the JSON object only.
+
+  Tools on offer (name | description | ports | output):
+  {{toolCatalog}}
