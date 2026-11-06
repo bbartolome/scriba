@@ -8,6 +8,14 @@ import { HEALTHZ_PATH, VERSION_PATH } from './shell/route-data';
 import { FakeApi, provideFakeApi } from './testing/fake-api';
 import { type FakeEventSourceControl, installFakeEventSource } from './testing/fake-event-source';
 import { type ViewportControl, type Viewport, installViewport } from './testing/viewport';
+import {
+  APP_DEFAULT_PATH,
+  LIST_PATH,
+  OLLAMA,
+  OPENROUTER,
+  listBody,
+  modelsPath,
+} from './features/providers/providers.fixtures';
 
 const PHONE: Viewport = { width: 390, height: 844 };
 const PHONE_LANDSCAPE: Viewport = { width: 844, height: 390 };
@@ -104,7 +112,11 @@ describe('the Shell, rendered through its routes', () => {
       expect(host.querySelector('nav.bottom')).not.toBeNull();
       expect(host.querySelector('nav.rail')).toBeNull();
       expect(host.querySelector('mat-nav-list')).toBeNull();
-      expect(navEntries(host).map((entry) => entry.label)).toEqual(['Home', 'Projects']);
+      expect(navEntries(host).map((entry) => entry.label)).toEqual([
+        'Home',
+        'Projects',
+        'Settings',
+      ]);
     });
 
     it('keeps a phone in landscape on the bottom nav', async () => {
@@ -127,6 +139,7 @@ describe('the Shell, rendered through its routes', () => {
         { label: 'Home', icon: 'home', href: '/' },
         { label: 'Projects', icon: 'folder', href: '/projects' },
         { label: 'Dummy', icon: 'science', href: '/dummy' },
+        { label: 'Settings', icon: 'settings', href: '/settings' },
       ]);
     });
 
@@ -139,6 +152,7 @@ describe('the Shell, rendered through its routes', () => {
         'Home',
         'Projects',
         'Dummy',
+        'Settings',
       ]);
       desktop.fixture.destroy();
 
@@ -368,6 +382,7 @@ describe('the Shell, rendered through its routes', () => {
         'Home',
         'Projects',
         'Dummy',
+        'Settings',
       ]);
       outside.fixture.destroy();
 
@@ -382,5 +397,47 @@ describe('the Shell, rendered through its routes', () => {
       });
       expect(inside.host.textContent).toContain('Notes for this project');
     });
+  });
+
+  describe('provider settings at phone width (survey 19 §3, criterion 7)', () => {
+    it('opens the settings from the phone nav, and switches the app default there', async () => {
+      setup();
+      viewport.resize(PHONE);
+      api.reply(
+        'GET',
+        LIST_PATH,
+        200,
+        listBody([OLLAMA, OPENROUTER], { providerId: 'ollama', model: '' }),
+      );
+      api.reply('GET', modelsPath('ollama'), 200, { models: ['local-model'] });
+      api.reply('GET', modelsPath('openrouter'), 200, { models: ['hosted-model'] });
+      api.reply('POST', APP_DEFAULT_PATH, 200, { providerId: 'openrouter', model: '' });
+
+      const { fixture, host, router } = await render('/settings');
+      await vi.waitFor(() => expect(host.querySelector('h1')?.textContent).toBe('Model providers'));
+
+      expect(router.url).toBe('/settings');
+      expect(host.querySelector('nav.bottom')).not.toBeNull();
+      expect(navEntries(host)).toContainEqual({
+        label: 'Settings',
+        icon: 'settings',
+        href: '/settings',
+      });
+
+      const select = host.querySelector<HTMLSelectElement>('select[name="defaultProvider"]');
+      if (select === null) throw new Error('the default selector is missing');
+      select.value = 'openrouter';
+      select.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+      select.form?.dispatchEvent(new Event('submit', { cancelable: true }));
+      fixture.detectChanges();
+
+      expect(api.requests).toContainEqual({
+        method: 'POST',
+        path: APP_DEFAULT_PATH,
+        body: { providerId: 'openrouter', model: '' },
+      });
+      // The settings chunk loads on demand, which takes longer than the default under load.
+    }, 15000);
   });
 });
