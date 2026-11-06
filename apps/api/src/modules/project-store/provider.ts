@@ -1,17 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import type {
-  EntityListItem,
-  FileEditRequest,
-  FileEntry,
-  FileReadResult,
-  FileWriteRequest,
-  FileWriteResult,
-  ResolvedEntity,
+import {
+  SearchRequestSchema,
+  type EntityListItem,
+  type FileEditRequest,
+  type FileEntry,
+  type FileReadResult,
+  type FileWriteRequest,
+  type FileWriteResult,
+  type ResolvedEntity,
+  type SearchPassage,
+  type SearchRequest,
 } from '@bbartolome/scriba-contracts/project-store';
 import { EntitiesService } from './entities.service.js';
 import { ProjectStoreEvents, type ProjectSwitchListener } from './events.js';
 import { FileApiService, type ListOptions } from './file-api.service.js';
 import { LibraryService } from './library.service.js';
+import { SearchService } from './search/search.service.js';
+import { ProjectRequestPipe } from './validation.js';
 
 /**
  * The in-process API for other API modules (spec, "File API": the provider on the same guard). Each
@@ -25,6 +30,7 @@ export class ProjectStoreProvider {
     private readonly library: LibraryService,
     private readonly files: FileApiService,
     private readonly entities: EntitiesService,
+    private readonly searches: SearchService,
     private readonly events: ProjectStoreEvents,
   ) {}
 
@@ -56,6 +62,15 @@ export class ProjectStoreProvider {
 
   async listEntities(projectId: string, type?: string): Promise<EntityListItem[]> {
     return this.entities.list(await this.library.requireActive(projectId), type);
+  }
+
+  /**
+   * Keyword search over the active project's `sources/` and `entities/`, the same search the POST route
+   * runs (spec, "Search (FTS5)"). The request takes the contract's validation, and the diff runs first.
+   */
+  async search(projectId: string, request: SearchRequest): Promise<SearchPassage[]> {
+    const parsed = new ProjectRequestPipe(SearchRequestSchema).transform(request) as SearchRequest;
+    return this.searches.search(await this.library.requireActive(projectId), parsed);
   }
 
   /**
