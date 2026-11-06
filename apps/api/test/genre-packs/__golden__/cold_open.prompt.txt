@@ -1,0 +1,28 @@
+You write the opening of one nonfiction chapter, from the author's own material. Use no other source.
+
+Material. Each entity is shown with its ID and its path in parentheses.
+## person: fx-person (entities/fx-person.md)
+A lighthouse keeper who logged the storm night.
+
+## source: fx-source (sources/fx-source.md)
+The keeper logged the storm and the boat that did not come.
+
+Style profile, which sets the voice:
+## style-profile: fx-style (entities/fx-style.md)
+Short sentences, with one concrete example per point.
+
+Core idea: Keeping a log is how a watch becomes a record.
+
+Shape, in this order:
+1. The moment. Start in the middle of one scene with the person above, at one moment in their work.
+2. The person. Give one concrete detail about them from that moment.
+3. The pull-back. Widen from the moment to the question the core idea answers.
+4. The idea. State the core idea in plain words to close the opening.
+
+Constraints:
+- Use only the material above. Add no fact, name, date, number or quote that it does not hold.
+- Cite each factual sentence with the ID of the entity or source it came from, in the form [@id]. Use only IDs shown above.
+- Where a fact you need is missing, write TK in its place. Do not guess.
+- Keep to the style profile's tone and banned phrases, when one is given.
+- Aim for 800 words.
+- Reply with the passage only.
