@@ -6,3 +6,7 @@
 export { ToolRegistryModule } from './tool-registry.module.js';
 export { ToolCatalogService } from './catalog/catalog.service.js';
 export { type ToolRegistryConfig } from './catalog/config.js';
+// The Agent loop runs narrative tools through the executor (survey 23 §4, #21). The executor's
+// internal folder is not importable from outside this module (module-boundaries), so the class is
+// re-exported here.
+export { ToolExecutorService } from './executor/executor.service.js';

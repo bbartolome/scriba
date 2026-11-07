@@ -6,6 +6,7 @@ import { setAgentLibrary } from './library.js';
 import { ProjectAccess } from './project-access.js';
 import { AgentRunService } from './run/agent-run.service.js';
 import { RunRegistry } from './run/live-run.js';
+import { ToolAccess } from './tools/tool-access.js';
 import { AgentViews } from './views.service.js';
 import { TranscriptStore } from './transcript/transcript-store.js';
 
@@ -22,6 +23,6 @@ registerBootStep(({ config }) => setAgentLibrary(config.booksDir));
 @Module({
   imports: [PlatformModule, ProvidersModule],
   controllers: [AgentLoopController],
-  providers: [ProjectAccess, TranscriptStore, RunRegistry, AgentRunService, AgentViews],
+  providers: [ProjectAccess, ToolAccess, TranscriptStore, RunRegistry, AgentRunService, AgentViews],
 })
 export class AgentLoopModule {}

@@ -25,19 +25,34 @@ import {
 } from '../../src/modules/project-store/index.js';
 import { ProvidersModule } from '../../src/modules/providers/index.js';
 import { SetupAuthModule } from '../../src/modules/setup-auth/setup-auth.module.js';
+import {
+  ToolRegistryModule,
+  type ToolRegistryConfig,
+} from '../../src/modules/tool-registry/index.js';
 import { startTestMock, type TestMock } from '../providers/support.js';
 
 /** The repo's samples, which Start from sample copies (examples/nonfiction is the outline sample). */
 export const EXAMPLES_DIR = fileURLToPath(new URL('../../../../examples', import.meta.url));
 
-/** The root module of the agent tests: Platform, the guard, Providers, the Project store and the loop. */
-function rootModuleFor(projectStore: ProjectStoreConfig): Type<object> {
+/** The built-in packs, as the image has them: the real registry loads these (survey 21 §2). */
+export const PACKS_DIR = fileURLToPath(new URL('../../../../packages/packs', import.meta.url));
+
+/**
+ * The root module of the agent tests: Platform, the guard, Providers, the Project store, the Tool
+ * registry on the real packs, and the loop. The composition root imports the registry, as the app
+ * module does, so the loop reaches it through the app graph.
+ */
+function rootModuleFor(
+  projectStore: ProjectStoreConfig,
+  registry: ToolRegistryConfig,
+): Type<object> {
   @Module({
     imports: [
       PlatformModule,
       SetupAuthModule,
       ProvidersModule,
       ProjectStoreModule.withConfig(projectStore),
+      ToolRegistryModule.withConfig(registry),
       AgentLoopModule,
     ],
   })
@@ -53,12 +68,21 @@ export interface RunningAgentApp {
   close(): Promise<void>;
 }
 
+export interface AgentAppOptions {
+  /** The packs root the registry loads. The real packs by default. */
+  readonly packsDir?: string;
+}
+
 /** Starts the app on a fresh library, with the repo's samples. The provider starts unset. */
-export async function startAgentApp(): Promise<RunningAgentApp> {
+export async function startAgentApp(options: AgentAppOptions = {}): Promise<RunningAgentApp> {
   const library = await createTempLibrary();
   const config: ProjectStoreConfig = { booksDir: library.booksDir, examplesDir: EXAMPLES_DIR };
+  const registry: ToolRegistryConfig = {
+    booksDir: library.booksDir,
+    packsDir: options.packsDir ?? PACKS_DIR,
+  };
   await runPreListenBoot(parseScribaEnv({ SCRIBA_BOOKS_DIR: library.booksDir }));
-  const app = await NestFactory.create<NestExpressApplication>(rootModuleFor(config), {
+  const app = await NestFactory.create<NestExpressApplication>(rootModuleFor(config, registry), {
     logger: false,
     bodyParser: false,
   });
@@ -89,7 +113,7 @@ export interface Answer {
 /** One request, signed in the way a browser is. Mutations carry the app's Origin. */
 export async function call(
   running: RunningAgentApp,
-  method: 'GET' | 'POST',
+  method: 'GET' | 'POST' | 'PUT',
   path: string,
   body?: unknown,
 ): Promise<Answer> {
