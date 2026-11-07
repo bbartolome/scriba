@@ -39,9 +39,7 @@ export function normalizeLineBreaks(text: string, lineBreak: string): string {
 export function documentExtensions(raw: string): Extension[] {
   return [
     EditorState.lineSeparator.of(dominantLineSeparator(raw)),
-    EditorView.clipboardInputFilter.of((text, state) =>
-      normalizeLineBreaks(text, state.lineBreak),
-    ),
+    EditorView.clipboardInputFilter.of((text, state) => normalizeLineBreaks(text, state.lineBreak)),
   ];
 }
 

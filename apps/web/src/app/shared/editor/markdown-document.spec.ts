@@ -1,3 +1,4 @@
+import { ROUND_TRIP_FIXTURES } from './fixtures';
 import {
   dominantLineSeparator,
   documentText,
@@ -5,26 +6,8 @@ import {
   normalizeLineBreaks,
 } from './markdown-document';
 
-/**
- * The byte-level fixtures from spec #17 (editor A1), plus a lone carriage return, which CodeMirror
- * would otherwise read as a line break. The round trip must return each one byte for byte.
- */
-const FIXTURES: Readonly<Record<string, string>> = {
-  'YAML front matter': '---\ntitle: The Long Road\nstatus: draft\n---\n\n# Chapter One\n\nText.\n',
-  'underscore and star emphasis': '_emphasis_ and *emphasis* in one line.\n',
-  'CRLF endings': '# Chapter One\r\n\r\nFirst paragraph.\r\nSecond line.\r\n',
-  'mixed endings': '# Chapter One\r\n\r\nFirst paragraph.\nSecond line.\r\nThird line.\n',
-  'no trailing newline': '# Chapter One\n\nLast line with no newline',
-  'CRLF with no trailing newline': 'one\r\ntwo',
-  'leading BOM': '﻿# Chapter One\n\nText.\n',
-  'trailing whitespace': 'Trailing spaces.   \nTab\t\n\n',
-  'lone carriage return': 'alpha\rbeta\n',
-  'empty file': '',
-  'only a newline': '\n',
-};
-
 describe('Markdown document round trip (spec #17 editor A1)', () => {
-  for (const [name, raw] of Object.entries(FIXTURES)) {
+  for (const [name, raw] of Object.entries(ROUND_TRIP_FIXTURES)) {
     it(`returns ${name} with no edits byte for byte`, () => {
       // JSON keeps the carriage returns visible in a failure message.
       expect(JSON.stringify(documentText(loadDocument(raw)))).toBe(JSON.stringify(raw));
@@ -44,9 +27,7 @@ describe('a targeted edit (spec #17 editor A2)', () => {
     const state = loadDocument('alpha\r\nbeta\ngamma\r\n');
     const edited = state.update({ changes: { from: state.doc.line(2).to, insert: 'X' } }).state;
 
-    expect(JSON.stringify(documentText(edited))).toBe(
-      JSON.stringify('alpha\r\nbeta\ngammaX\r\n'),
-    );
+    expect(JSON.stringify(documentText(edited))).toBe(JSON.stringify('alpha\r\nbeta\ngammaX\r\n'));
   });
 });
 
