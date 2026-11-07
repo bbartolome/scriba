@@ -16,15 +16,22 @@ import { ProjectStoreEvents } from './events.js';
 import { ProjectStoreProvider } from './provider.js';
 import { SearchController } from './search/search.controller.js';
 import { SearchService } from './search/search.service.js';
+import { PendingController } from './pending/pending.controller.js';
+import { PendingStore } from './pending/pending-store.js';
+import { PendingValidators } from './pending/validators.js';
+import { ProposeService } from './pending/propose.service.js';
+import { ReviewService } from './pending/review.service.js';
+import { DraftVersionsService } from './versions/draft-versions.service.js';
+import { ProjectWatcher } from './watcher.js';
 
 /**
  * The Project store module (survey 20 §2). It owns the library, the active project, the file API,
- * entity resolution and the in-process provider. The configuration comes from the environment, and
- * `withConfig` replaces it for tests.
+ * entity resolution, pending changes, draft versions and the in-process provider. The configuration
+ * comes from the environment, and `withConfig` replaces it for tests.
  */
 @Module({
   imports: [PlatformModule],
-  controllers: [ProjectsController, FileApiController, SearchController],
+  controllers: [ProjectsController, FileApiController, SearchController, PendingController],
   providers: [
     { provide: PROJECT_STORE_CONFIG, useFactory: () => projectStoreConfigFromEnv(process.env) },
     FileLocks,
@@ -34,6 +41,12 @@ import { SearchService } from './search/search.service.js';
     EntitiesService,
     SearchService,
     ProjectStoreEvents,
+    PendingStore,
+    PendingValidators,
+    ProposeService,
+    ReviewService,
+    DraftVersionsService,
+    ProjectWatcher,
     ProjectStoreProvider,
   ],
   exports: [ProjectStoreProvider],

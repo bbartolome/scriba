@@ -66,6 +66,8 @@ export interface StartAppOptions {
    * a sample request fails as not found.
    */
   readonly examplesDir?: string;
+  /** Runs the Project store's optional watcher (`SCRIBA_WATCHER`). Off unless a test opts in. */
+  readonly projectStoreWatcher?: boolean;
   /** Installs the tailnet filter on the server, as main.ts does. Off unless a test opts in. */
   readonly tailnetFilter?: boolean;
   /**
@@ -155,6 +157,7 @@ export async function startApp(
   const projectStore: ProjectStoreConfig = {
     booksDir,
     examplesDir: options.examplesDir ?? join(booksDir, '..', 'no-samples'),
+    watcher: options.projectStoreWatcher === true,
   };
   const app = await NestFactory.create<NestExpressApplication>(
     createTestRootModule(options.publisher, projectStore, registry),
