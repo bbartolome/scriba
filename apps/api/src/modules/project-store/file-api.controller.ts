@@ -22,6 +22,7 @@ import {
 import { EntitiesService } from './entities.service.js';
 import { FileApiService } from './file-api.service.js';
 import { LibraryService } from './library.service.js';
+import { ProposeService } from './pending/propose.service.js';
 import { ProjectRequestPipe } from './validation.js';
 
 /**
@@ -35,6 +36,7 @@ export class FileApiController {
     private readonly library: LibraryService,
     private readonly files: FileApiService,
     private readonly entities: EntitiesService,
+    private readonly proposals: ProposeService,
   ) {}
 
   @Get(PROJECT_STORE_ROUTES.fileList.path)
@@ -57,7 +59,14 @@ export class FileApiController {
     @Query(new ProjectRequestPipe(FileReadQuerySchema)) query: FileReadQuery,
   ): Promise<FileReadResult> {
     const project = await this.library.requireActive(projectId);
-    return this.files.read(project, query.path, query.runId);
+    // The overlay (spec, "File API"): a run that has a pending change for the path reads its own proposed text.
+    if (query.runId !== undefined) {
+      const overlay = await this.proposals.overlayRead(project, query.path, query.runId);
+      if (overlay !== undefined) {
+        return overlay;
+      }
+    }
+    return this.files.read(project, query.path);
   }
 
   @Post(PROJECT_STORE_ROUTES.fileWrite.path)

@@ -42,8 +42,27 @@ function countOccurrences(text: string, needle: string): number {
   }
 }
 
+/**
+ * Replaces the one occurrence of `needle` in `text`. Zero matches and several matches fail with different
+ * codes, so the caller can tell them apart. Shared by the author's edit and by a propose.
+ */
+export function replaceExactlyOnce(text: string, needle: string, replacement: string): string {
+  const matches = countOccurrences(text, needle);
+  if (matches === 0) {
+    throw projectError('PROJECT_EDIT_NO_MATCH', 'The text to replace was not found.');
+  }
+  if (matches > 1) {
+    throw projectError(
+      'PROJECT_EDIT_AMBIGUOUS',
+      `The text to replace matches ${matches} times. Make it longer so it matches once.`,
+    );
+  }
+  const at = text.indexOf(needle);
+  return text.slice(0, at) + replacement + text.slice(at + needle.length);
+}
+
 /** A lock key for a real path: the (dev, ino) of an existing target, or the parent and lower-cased name. */
-async function lockKeyFor(realPath: string): Promise<string> {
+export async function lockKeyFor(realPath: string): Promise<string> {
   const target = await stat(realPath).catch(() => undefined);
   if (target !== undefined) {
     return `inode:${target.dev}:${target.ino}`;
@@ -56,7 +75,7 @@ async function lockKeyFor(realPath: string): Promise<string> {
 }
 
 /** Reads a real path. A missing file is undefined. A folder is refused, because it has no text. */
-async function readCurrent(realPath: string): Promise<Buffer | undefined> {
+export async function readCurrent(realPath: string): Promise<Buffer | undefined> {
   try {
     return await readFile(realPath);
   } catch (error) {
@@ -109,7 +128,7 @@ async function guardLogPath(project: ProjectLocation, input: unknown): Promise<G
  * The checks a write must pass before any byte is written: the text allowlist, no NUL, the 5 MB cap,
  * and for `project.yaml` the schema and the supported version. Returns the bytes to write.
  */
-function validateWrite(relPath: string, content: string): Buffer {
+export function validateWrite(relPath: string, content: string): Buffer {
   if (!hasTextName(relPath)) {
     throw projectError(
       'PROJECT_NOT_TEXT',
@@ -177,13 +196,7 @@ export class FileApiService {
    * not UTF-8 text. A too-new `project.yaml` is refused. The hash covers the disk bytes.
    */
   // provisional: survey 20 §7 item 20 (the hash is taken over the disk bytes)
-  async read(project: ProjectLocation, path: unknown, runId?: string): Promise<FileReadResult> {
-    if (runId !== undefined) {
-      throw projectError(
-        'PROJECT_VALIDATION_FAILED',
-        'Overlay reads (runId) arrive with pending changes in a later phase.',
-      );
-    }
+  async read(project: ProjectLocation, path: unknown): Promise<FileReadResult> {
     const guarded = await guardProjectPath(project, path);
     if (!guarded.exists) {
       throw projectError('PROJECT_NOT_FOUND', 'No file at that path.');
@@ -246,18 +259,7 @@ export class FileApiService {
       if (text === undefined) {
         throw projectError('PROJECT_NOT_TEXT', 'That file is not UTF-8 text.');
       }
-      const matches = countOccurrences(text, request.old);
-      if (matches === 0) {
-        throw projectError('PROJECT_EDIT_NO_MATCH', 'The text to replace was not found.');
-      }
-      if (matches > 1) {
-        throw projectError(
-          'PROJECT_EDIT_AMBIGUOUS',
-          `The text to replace matches ${matches} times. Make it longer so it matches once.`,
-        );
-      }
-      const at = text.indexOf(request.old);
-      return text.slice(0, at) + request.new + text.slice(at + request.old.length);
+      return replaceExactlyOnce(text, request.old, request.new);
     });
   }
 

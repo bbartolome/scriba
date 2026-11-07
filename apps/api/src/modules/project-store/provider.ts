@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import {
+  ProposeRequestSchema,
   SearchRequestSchema,
+  type DraftVersionListing,
   type EntityListItem,
   type FileEditRequest,
   type FileEntry,
   type FileReadResult,
   type FileWriteRequest,
   type FileWriteResult,
+  type PendingChange,
+  type ProposeRequest,
   type ResolvedEntity,
   type SearchPassage,
   type SearchRequest,
@@ -15,6 +19,9 @@ import { EntitiesService } from './entities.service.js';
 import { ProjectStoreEvents, type ProjectSwitchListener } from './events.js';
 import { FileApiService, type ListOptions } from './file-api.service.js';
 import { LibraryService } from './library.service.js';
+import { ProposeService } from './pending/propose.service.js';
+import { ReviewService } from './pending/review.service.js';
+import { DraftVersionsService } from './versions/draft-versions.service.js';
 import { SearchService } from './search/search.service.js';
 import { ProjectRequestPipe } from './validation.js';
 
@@ -32,6 +39,9 @@ export class ProjectStoreProvider {
     private readonly entities: EntitiesService,
     private readonly searches: SearchService,
     private readonly events: ProjectStoreEvents,
+    private readonly proposals: ProposeService,
+    private readonly review: ReviewService,
+    private readonly versions: DraftVersionsService,
   ) {}
 
   /** The active project's id, or undefined when none is active. */
@@ -90,5 +100,64 @@ export class ProjectStoreProvider {
   /** Subscribes to `project.switched` in-process. Returns the function that removes the listener. */
   onProjectSwitched(listener: ProjectSwitchListener): () => void {
     return this.events.onProjectSwitched(listener);
+  }
+
+  /**
+   * Propose (spec, "File API"): a write or an edit that becomes a pending change. It never touches disk. It
+   * takes the route's validation and rules, so an in-process caller fails the same way an HTTP caller does.
+   */
+  async propose(projectId: string, request: ProposeRequest): Promise<PendingChange> {
+    const parsed = new ProjectRequestPipe(ProposeRequestSchema).transform(
+      request,
+    ) as ProposeRequest;
+    return this.proposals.propose(await this.library.requireActive(projectId), parsed);
+  }
+
+  /** The open queue, with each conflict flag computed against the disk now. It writes nothing. */
+  async listPending(projectId: string): Promise<PendingChange[]> {
+    return this.review.queue(await this.library.requireActive(projectId));
+  }
+
+  /** Accept a pending change, with optional edited text for the same three-way check. */
+  async acceptPending(
+    projectId: string,
+    pendingId: string,
+    content?: string,
+  ): Promise<PendingChange> {
+    return this.review.accept(await this.library.requireActive(projectId), pendingId, content);
+  }
+
+  /** Reject a pending change. */
+  async rejectPending(projectId: string, pendingId: string): Promise<PendingChange> {
+    return this.review.reject(await this.library.requireActive(projectId), pendingId);
+  }
+
+  /** Refresh a `base-changed` change by a three-way merge. */
+  async refreshPending(projectId: string, pendingId: string): Promise<PendingChange> {
+    return this.review.refresh(await this.library.requireActive(projectId), pendingId);
+  }
+
+  /** Accept anyway: the overwritten content is saved first, then the proposal is written. */
+  async acceptAnywayPending(projectId: string, pendingId: string): Promise<PendingChange> {
+    return this.review.acceptAnyway(await this.library.requireActive(projectId), pendingId);
+  }
+
+  /** The versions of a top-level draft, newest first. */
+  async listVersions(projectId: string, draftPath: string): Promise<DraftVersionListing> {
+    return this.versions.list(await this.library.requireActive(projectId), draftPath);
+  }
+
+  /** The content of one version of a top-level draft. */
+  async readVersion(projectId: string, draftPath: string, versionId: string): Promise<string> {
+    return this.versions.read(await this.library.requireActive(projectId), draftPath, versionId);
+  }
+
+  /** Restore a version: the current content is saved as a version first, then the restored text is written. */
+  async restoreVersion(
+    projectId: string,
+    draftPath: string,
+    versionId: string,
+  ): Promise<FileWriteResult> {
+    return this.versions.restore(await this.library.requireActive(projectId), draftPath, versionId);
   }
 }

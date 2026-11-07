@@ -1,13 +1,18 @@
 import { Injectable, inject } from '@angular/core';
 import type { Observable } from 'rxjs';
 import {
+  DraftVersionListingSchema,
   FileListResponseSchema,
   FileReadResultSchema,
+  FileWriteResultSchema,
   PROJECT_STORE_ROUTES,
   ProjectListResponseSchema,
   ProjectResponseSchema,
+  type DraftVersionListing,
   type FileListResponse,
   type FileReadResult,
+  type FileWriteRequest,
+  type FileWriteResult,
   type NewProjectRequest,
   type ProjectListResponse,
   type ProjectResponse,
@@ -71,6 +76,23 @@ export class ProjectStoreApi {
     return this.client.get(
       `${forProject(PROJECT_STORE_ROUTES.fileRead.path, projectId)}?path=${encodeURIComponent(path)}`,
       FileReadResultSchema,
+    );
+  }
+
+  /** The author's save. With `baseHash`, the server refuses it when the file changed on disk since it was read. */
+  writeFile(projectId: string, request: FileWriteRequest): Observable<FileWriteResult> {
+    return this.client.post(
+      forProject(PROJECT_STORE_ROUTES.fileWrite.path, projectId),
+      request,
+      FileWriteResultSchema,
+    );
+  }
+
+  /** The saved versions of one top-level draft, newest first. */
+  listVersions(projectId: string, draftPath: string): Observable<DraftVersionListing> {
+    return this.client.get(
+      `${forProject(PROJECT_STORE_ROUTES.draftVersions.path, projectId)}?draftPath=${encodeURIComponent(draftPath)}`,
+      DraftVersionListingSchema,
     );
   }
 }
