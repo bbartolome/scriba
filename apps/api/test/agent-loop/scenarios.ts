@@ -145,6 +145,65 @@ const SCRIPTS: Readonly<Record<string, () => Scenario>> = {
       }),
     ]),
 
+  // Proposes a draft, then one exact replacement in the same file, then answers. Both land in one change.
+  'write-file': () =>
+    scenario('write-file', [
+      step(
+        [
+          toolCall('call_write', 'write_file', [
+            '{"path": "drafts/intro.md", "content": "The first draft.\\n"}',
+          ]),
+        ],
+        { turn: 0 },
+      ),
+      step(
+        [
+          toolCall('call_edit', 'edit_file', [
+            '{"path": "drafts/intro.md", "old": "first", "new": "second"}',
+          ]),
+        ],
+        { turn: 1 },
+      ),
+      step([content('I proposed the change.')], { hasToolResult: true }),
+    ]),
+
+  // Proposes a draft, then reads it back: the read sees the run's own pending text, not the disk.
+  'write-then-read': () =>
+    scenario('write-then-read', [
+      step(
+        [
+          toolCall('call_write', 'write_file', [
+            '{"path": "drafts/intro.md", "content": "The first draft.\\n"}',
+          ]),
+        ],
+        { turn: 0 },
+      ),
+      step([toolCall('call_read', 'read_file', ['{"path": "drafts/intro.md"}'])], { turn: 1 }),
+      step([content('I read the draft back.')], { hasToolResult: true }),
+    ]),
+
+  // Two exact replacements in a file that exists, so the change is a modify with a captured base.
+  'edit-existing': () =>
+    scenario('edit-existing', [
+      step(
+        [
+          toolCall('call_edit_1', 'edit_file', [
+            '{"path": "sources/notes.md", "old": "beta", "new": "delta"}',
+          ]),
+        ],
+        { turn: 0 },
+      ),
+      step(
+        [
+          toolCall('call_edit_2', 'edit_file', [
+            '{"path": "sources/notes.md", "old": "gamma", "new": "epsilon"}',
+          ]),
+        ],
+        { turn: 1 },
+      ),
+      step([content('I proposed both edits.')], { hasToolResult: true }),
+    ]),
+
   // Calls a tool every step, forever: the step cap ends it.
   endless: () =>
     scenario('endless', [step([toolCall('call_loop', 'list_files', ['{"path": ""}'])])]),

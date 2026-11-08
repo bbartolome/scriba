@@ -113,6 +113,18 @@ export class ProjectStoreProvider {
     return this.proposals.propose(await this.library.requireActive(projectId), parsed);
   }
 
+  /**
+   * The run's read overlay (spec, "File API"): the text the run has pending for the path, or undefined when it
+   * has none. It writes nothing, so a run reads its own proposal and no one else's.
+   */
+  async overlayRead(
+    projectId: string,
+    path: string,
+    runId: string,
+  ): Promise<FileReadResult | undefined> {
+    return this.proposals.overlayRead(await this.library.requireActive(projectId), path, runId);
+  }
+
   /** The open queue, with each conflict flag computed against the disk now. It writes nothing. */
   async listPending(projectId: string): Promise<PendingChange[]> {
     return this.review.queue(await this.library.requireActive(projectId));
