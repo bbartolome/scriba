@@ -1,4 +1,5 @@
 import { type DraftProvenance } from '@bbartolome/scriba-contracts/agent-loop';
+import { GraphFileSchema } from '@bbartolome/scriba-contracts/graph-runner';
 import {
   type FunctionTool,
   type ReferencedEntity,
@@ -105,6 +106,10 @@ async function draftOf(
     at: new Date().toISOString(),
   };
   const { kind, content } = response.output;
+  if (kind === 'graph') {
+    // A graph is not a draft: it is checked against the Graph runner schema, then proposed under graphs/.
+    return graphProposal(ctx, content, response.sourcesUsed);
+  }
   // The card has no provenance field (the contract is unchanged), so the provenance rides in the body.
   // provisional: survey 23 §3 P3 (judgement: card provenance is carried in the output body)
   return {
@@ -114,6 +119,106 @@ async function draftOf(
     sourcesUsed: response.sourcesUsed,
     provenance,
   };
+}
+
+/** The file a proposed graph is written to: `graphs/` and the graph's title, as a lower-case slug. */
+export function graphPathOf(title: string): string {
+  // The cut comes first, then the hyphens are trimmed, so the stem never ends with a hyphen.
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .slice(0, 60)
+    .replace(/^-+|-+$/g, '');
+  return `graphs/${slug === '' ? 'graph' : slug}.json`;
+}
+
+/** The most schema issues one refusal names; the rest are counted, so a long graph cannot flood the card. */
+const GRAPH_ERROR_LINES = 20;
+
+/**
+ * A path for a proposed graph that this run has not used yet. A second graph from the same run whose title
+ * gives the same file would fold into the first, so it gets a numbered name instead.
+ */
+async function freeGraphPath(ctx: CallContext, base: string): Promise<string> {
+  // Every open pending change in the project, whichever run made it, and every graph file already on disk.
+  const pending = (await ctx.store.listPending(ctx.projectId)).map((change) => change.targetPath);
+  // A missing graphs/ folder holds no graphs yet. Any other failure is a real error, and is not hidden.
+  // Paths are compared in lower case, since a case-insensitive disk would treat two names as one file.
+  const onDisk = await ctx.store
+    .listFiles(ctx.projectId, { path: 'graphs' })
+    .then((entries) => entries.map((entry) => entry.path.toLowerCase()))
+    .catch((failure: unknown) => {
+      if (failure instanceof ApiException && failure.code === 'PROJECT_NOT_FOUND') {
+        return [];
+      }
+      throw failure;
+    });
+  const taken = new Set([...pending.map((path) => path.toLowerCase()), ...onDisk]);
+  if (!taken.has(base)) {
+    return base;
+  }
+  for (let index = 2; ; index += 1) {
+    const candidate = base.replace(/\.json$/, `-${index}.json`);
+    if (!taken.has(candidate)) {
+      return candidate;
+    }
+  }
+}
+
+/**
+ * Checks a graph the model wrote against the Graph runner schema. A graph that does not parse, or does
+ * not match the schema, is a failed call with a readable message, so the model can correct it and the
+ * call counts as a retry. A graph that does match becomes a pending change under `graphs/`.
+ */
+async function graphProposal(
+  ctx: CallContext,
+  content: string,
+  sourcesUsed: ToolOutcome['sourcesUsed'],
+): Promise<ToolOutcome> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw invalidGraph([
+      'The graph is not valid JSON.',
+      'Write the graph again as one JSON object.',
+    ]);
+  }
+  const checked = GraphFileSchema.safeParse(parsed);
+  if (!checked.success) {
+    const issues = checked.error.issues;
+    const lines = issues
+      .slice(0, GRAPH_ERROR_LINES)
+      .map((issue) => `- ${issue.path.join('.') || '(graph)'}: ${issue.message}`);
+    const more = issues.length - GRAPH_ERROR_LINES;
+    throw invalidGraph([
+      'The graph does not match the Graph runner schema:',
+      ...lines,
+      ...(more > 0 ? [`...and ${more} more`] : []),
+      'Fix these and try again.',
+    ]);
+  }
+  const title =
+    typeof (parsed as { name?: unknown }).name === 'string'
+      ? (parsed as { name: string }).name
+      : '';
+  const change = await ctx.store.propose(ctx.projectId, {
+    op: 'write',
+    path: await freeGraphPath(ctx, graphPathOf(title)),
+    content: `${JSON.stringify(checked.data, null, 2)}\n`,
+    origin: { kind: 'agent-run', runId: ctx.runId, toolCallId: ctx.callId },
+  });
+  return {
+    summary: `Proposed a graph at ${change.targetPath}.`,
+    output: { kind: 'graph', pendingId: change.id, path: change.targetPath },
+    modelText: `Proposed a graph at ${change.targetPath}. It waits for the author's review, and no file is written until they accept it.`,
+    sourcesUsed,
+  };
+}
+
+/** The error for a graph the schema refuses. `GRAPH_SCHEMA_INVALID` is the contract's code. */
+function invalidGraph(lines: readonly string[]): ApiException {
+  return new ApiException(422, 'GRAPH_SCHEMA_INVALID', lines.join('\n'));
 }
 
 /** The keys of a tool's style fields, from its spec: the properties whose `x-scriba-type` is `style`. */

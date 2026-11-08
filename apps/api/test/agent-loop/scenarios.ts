@@ -65,6 +65,68 @@ export const WORKHORSE_ARGS = {
 } as const;
 
 const SCRIPTS: Readonly<Record<string, () => Scenario>> = {
+  // propose_graph returns a graph that matches the Graph runner schema, so it becomes a pending change.
+  'graph-valid': narrativeTurns(
+    'graph-valid',
+    'propose_graph',
+    { intent: 'Sketch the cold open', view: 'story' },
+    '{"schemaVersion": 1, "view": "story", "name": "Cold open", "nodes": [{"id": "open", "kind": "beat", "label": "Open mid-scene", "position": {"x": 0, "y": 0}}], "edges": []}',
+  ),
+
+  // Two propose_graph calls with the same title in one run: the second must not replace the first.
+  'graph-twice': () =>
+    scenario('graph-twice', [
+      step([narrativeCall('call_graph_1', 'propose_graph', { intent: 'Sketch', view: 'story' })], {
+        turn: 0,
+      }),
+      step(
+        [
+          content(
+            '{"schemaVersion": 1, "view": "story", "name": "Cold open", "nodes": [{"id": "open", "kind": "beat", "label": "Open mid-scene", "position": {"x": 0, "y": 0}}], "edges": []}',
+          ),
+        ],
+        { turn: 1 },
+      ),
+      step([narrativeCall('call_graph_2', 'propose_graph', { intent: 'Sketch', view: 'story' })], {
+        turn: 2,
+      }),
+      step(
+        [
+          content(
+            '{"schemaVersion": 1, "view": "story", "name": "Cold open", "nodes": [{"id": "open", "kind": "beat", "label": "Open mid-scene", "position": {"x": 0, "y": 0}}], "edges": []}',
+          ),
+        ],
+        { turn: 3 },
+      ),
+      step([content('Both graphs are proposed.')], { turn: 4 }),
+    ]),
+
+  // A graph with many bad nodes: the refusal names the first twenty issues and counts the rest.
+  'graph-many-errors': narrativeTurns(
+    'graph-many-errors',
+    'propose_graph',
+    { intent: 'Sketch', view: 'story' },
+    '{"schemaVersion": 1, "view": "story", "name": "Cold open", "nodes": [' +
+      Array.from({ length: 25 }, () => '{}').join(', ') +
+      '], "edges": []}',
+  ),
+
+  // propose_graph returns text that is not JSON at all: the call fails with a readable error.
+  'graph-not-json': narrativeTurns(
+    'graph-not-json',
+    'propose_graph',
+    { intent: 'Sketch the cold open', view: 'story' },
+    'Here is the graph: the open, then the reveal.',
+  ),
+
+  // propose_graph returns a graph whose nodes are not a list: the call fails with a readable error.
+  'graph-invalid': narrativeTurns(
+    'graph-invalid',
+    'propose_graph',
+    { intent: 'Sketch the cold open', view: 'story' },
+    '{"schemaVersion": 1, "view": "story", "name": "Cold open", "nodes": "none"}',
+  ),
+
   // One scenario per workhorse. Each draft cites the entities it was built from.
   'workhorse-cold-open': narrativeTurns(
     'workhorse-cold-open',
