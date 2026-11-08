@@ -266,6 +266,22 @@ const SCRIPTS: Readonly<Record<string, () => Scenario>> = {
       step([content('I proposed both edits.')], { hasToolResult: true }),
     ]),
 
+  // Proposes a file, then holds the connection until the run is stopped: the pending change must survive the stop.
+  'write-then-hold': () =>
+    scenario('write-then-hold', [
+      step(
+        [
+          toolCall('call_write', 'write_file', [
+            '{"path": "drafts/stopped.md", "content": "Kept.\\n"}',
+          ]),
+        ],
+        {
+          turn: 0,
+        },
+      ),
+      step([holdReply(15000)], { turn: 1 }),
+    ]),
+
   // Calls a tool every step, forever: the step cap ends it.
   endless: () =>
     scenario('endless', [step([toolCall('call_loop', 'list_files', ['{"path": ""}'])])]),
