@@ -4,7 +4,11 @@ import {
   type SourceUsed,
   type ToolFamily,
 } from '@bbartolome/scriba-contracts/agent-loop';
-import { SEARCH_LIMIT_MAX, SEARCH_SCOPES } from '@bbartolome/scriba-contracts/project-store';
+import {
+  SEARCH_LIMIT_MAX,
+  SEARCH_SCOPES,
+  type PendingChange,
+} from '@bbartolome/scriba-contracts/project-store';
 import { ApiException } from '../../platform/index.js';
 import type { ProjectStoreProvider } from '../../project-store/index.js';
 
@@ -20,6 +24,9 @@ export const READ_LIMIT = 12_000;
 export interface ToolContext {
   readonly projectId: string;
   readonly store: ProjectStoreProvider;
+  /** The run the call belongs to. A proposed change and a read overlay are both keyed by it. */
+  readonly runId: string;
+  readonly callId: string;
 }
 
 export interface ToolOutcome {
@@ -43,7 +50,7 @@ export type ArgumentCheck =
 type JsonSchema = Record<string, unknown>;
 
 export interface BuiltinTool {
-  readonly name: 'list_files' | 'read_file' | 'search_notes';
+  readonly name: 'list_files' | 'read_file' | 'search_notes' | 'write_file' | 'edit_file';
   readonly family: ToolFamily;
   readonly description: string;
   readonly parameters: JsonSchema;
@@ -103,6 +110,37 @@ const ajv = new Ajv({ allErrors: true, strict: true });
 const LIST_FILES_CHECK = ajv.compile(LIST_FILES_SCHEMA);
 const READ_FILE_CHECK = ajv.compile(READ_FILE_SCHEMA);
 const SEARCH_NOTES_CHECK = ajv.compile(SEARCH_NOTES_SCHEMA);
+
+const WRITE_FILE_SCHEMA: JsonSchema = {
+  type: 'object',
+  properties: {
+    path: {
+      type: 'string',
+      description: 'The file to write, relative to the project, for example drafts/outline.md.',
+    },
+    content: { type: 'string', description: 'The whole new text of the file.' },
+  },
+  required: ['path', 'content'],
+  additionalProperties: false,
+};
+
+const EDIT_FILE_SCHEMA: JsonSchema = {
+  type: 'object',
+  properties: {
+    path: { type: 'string', description: 'The file to edit, relative to the project.' },
+    old: {
+      type: 'string',
+      minLength: 1,
+      description: 'The exact text to replace. It must occur exactly once in the file.',
+    },
+    new: { type: 'string', description: 'The text that replaces it. It may be empty.' },
+  },
+  required: ['path', 'old', 'new'],
+  additionalProperties: false,
+};
+
+const WRITE_FILE_CHECK = ajv.compile(WRITE_FILE_SCHEMA);
+const EDIT_FILE_CHECK = ajv.compile(EDIT_FILE_SCHEMA);
 
 /** The argument text of one call, as a name a reader would say: `path`, or the root for `""`. */
 function labelOf(pointer: string): string {
@@ -192,7 +230,10 @@ async function listFiles(ctx: ToolContext, args: Record<string, unknown>): Promi
 }
 
 async function readFile(ctx: ToolContext, args: Record<string, unknown>): Promise<ToolOutcome> {
-  const file = await ctx.store.readFile(ctx.projectId, textArg(args, 'path'));
+  // A run reads its own pending text when it has one, so a second read sees what the run changed.
+  const path = textArg(args, 'path');
+  const overlay = await ctx.store.overlayRead(ctx.projectId, path, ctx.runId);
+  const file = overlay ?? (await ctx.store.readFile(ctx.projectId, path));
   const text = file.content;
   const cut = text.length > READ_LIMIT;
   const shown = cut
@@ -205,6 +246,70 @@ async function readFile(ctx: ToolContext, args: Record<string, unknown>): Promis
     ...(cut ? { originalLength: text.length } : {}),
   };
 }
+
+/** A string argument that may be empty, such as the text a write leaves in a file. */
+function plainArg(args: Record<string, unknown>, key: string): string {
+  const value = args[key];
+  return typeof value === 'string' ? value : '';
+}
+
+/**
+ * The outcome of a change the run proposed. The change waits for the author's review, and it reaches
+ * disk only when they accept it.
+ */
+function proposedOutcome(change: PendingChange): ToolOutcome {
+  return {
+    summary: `Proposed a change to ${change.targetPath}.`,
+    output: { pendingId: change.id, path: change.targetPath, kind: change.kind },
+    modelText: `Proposed a change to ${change.targetPath}. It waits for the author's review, and no file is written until they accept it.`,
+  };
+}
+
+/**
+ * Proposes a whole new text for a file (spec, "File API"). A second write to the same file in the same
+ * run folds into the change the first one made, so the run has one pending change per file.
+ */
+async function writeFile(ctx: ToolContext, args: Record<string, unknown>): Promise<ToolOutcome> {
+  const change = await ctx.store.propose(ctx.projectId, {
+    op: 'write',
+    path: textArg(args, 'path'),
+    content: plainArg(args, 'content'),
+    origin: { kind: 'agent-run', runId: ctx.runId, toolCallId: ctx.callId },
+  });
+  return proposedOutcome(change);
+}
+
+/** Proposes one exact replacement in a file. The old text must occur once in the file the run sees. */
+async function editFile(ctx: ToolContext, args: Record<string, unknown>): Promise<ToolOutcome> {
+  const change = await ctx.store.propose(ctx.projectId, {
+    op: 'edit',
+    path: textArg(args, 'path'),
+    old: textArg(args, 'old'),
+    new: plainArg(args, 'new'),
+    origin: { kind: 'agent-run', runId: ctx.runId, toolCallId: ctx.callId },
+  });
+  return proposedOutcome(change);
+}
+
+const WRITE_FILE: BuiltinTool = {
+  name: 'write_file',
+  family: 'project',
+  description:
+    'Propose a new text for one project file. The change waits for the author to review it, and nothing is written to the file until they accept it.',
+  parameters: WRITE_FILE_SCHEMA,
+  check: checkWith('write_file', WRITE_FILE_SCHEMA, WRITE_FILE_CHECK),
+  execute: writeFile,
+};
+
+const EDIT_FILE: BuiltinTool = {
+  name: 'edit_file',
+  family: 'project',
+  description:
+    'Propose one exact replacement in a project file. The old text must occur exactly once. The change waits for the author to review it, and nothing is written until they accept it.',
+  parameters: EDIT_FILE_SCHEMA,
+  check: checkWith('edit_file', EDIT_FILE_SCHEMA, EDIT_FILE_CHECK),
+  execute: editFile,
+};
 
 const LIST_FILES: BuiltinTool = {
   name: 'list_files',
@@ -267,7 +372,13 @@ const SEARCH_NOTES: BuiltinTool = {
 };
 
 /** The built-in tools of this phase, in the order the model is offered them. */
-export const BUILTIN_TOOLS: readonly BuiltinTool[] = [LIST_FILES, READ_FILE, SEARCH_NOTES];
+export const BUILTIN_TOOLS: readonly BuiltinTool[] = [
+  LIST_FILES,
+  READ_FILE,
+  SEARCH_NOTES,
+  WRITE_FILE,
+  EDIT_FILE,
+];
 
 /** The raw argument text of one call, parsed. An empty text is no arguments. */
 export type ParsedArguments =

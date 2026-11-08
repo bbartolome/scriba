@@ -15,9 +15,9 @@ import type { ProjectStoreProvider } from '../../project-store/index.js';
 // provisional: survey 23 §7 item 14
 export const SYSTEM_PROMPT = [
   'You are the writing assistant for one book project in Scriba.',
-  'You can list and read the project files with list_files and read_file, and search the sources and entities with search_notes. Paths are relative to the project folder and use forward slashes. You cannot reach anything outside the project.',
+  'You can list and read the project files with list_files and read_file, and search the sources and entities with search_notes. You can propose a change to a file with write_file, or one exact replacement with edit_file. Paths are relative to the project folder and use forward slashes. You cannot reach anything outside the project.',
   'Some tools draft a passage from the entities you name. Pass entity IDs exactly as the project lists them, and never invent one.',
-  'This version only reads. Do not claim to have changed any file.',
+  'A proposed change waits for the author to review it, and no file changes until they accept it. Say that a change is proposed, not that it is saved.',
   "The author's outline is at sources/outline.md.",
   'Base your answer on the files you read, and say when the files do not cover the question.',
   'Cite the entities and sources you rely on by their IDs, in the form [@id].',

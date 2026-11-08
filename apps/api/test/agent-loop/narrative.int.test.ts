@@ -327,10 +327,10 @@ describe('phase narrative-tools: acceptance (survey 23 §3)', () => {
       await cp(join(PACKS_DIR, 'core'), join(packsRoot, 'core'), { recursive: true });
       await cp(join(PACKS_DIR, 'nonfiction'), join(packsRoot, 'nonfiction'), { recursive: true });
       const source = await readFile(join(PACKS_DIR, 'core', 'tools', 'propose_graph.yaml'), 'utf8');
-      // `write_file` is a reserved built-in name (spec, "Tool families"), so this copy must be left out.
+      // `check_grounding` is a reserved built-in name (spec, "Tool families"), so this copy must be left out.
       await writeFile(
-        join(packsRoot, 'core', 'tools', 'write_file.yaml'),
-        source.replace('name: propose_graph', 'name: write_file'),
+        join(packsRoot, 'core', 'tools', 'check_grounding.yaml'),
+        source.replace('name: propose_graph', 'name: check_grounding'),
       );
       running = await startAgentApp({ packsDir: packsRoot });
       mock = await startMock(['text-only']);
@@ -341,7 +341,7 @@ describe('phase narrative-tools: acceptance (survey 23 §3)', () => {
       await runToEnd(running, log, 'book-reserved', 'hello');
       const [first] = await chatBodies(mock, 'text-only');
       expect(toolNamesOf(first)).toContain('cold_open');
-      expect(toolNamesOf(first)).not.toContain('write_file');
+      expect(toolNamesOf(first)).not.toContain('check_grounding');
 
       const app = running;
       await eventually(
@@ -349,7 +349,7 @@ describe('phase narrative-tools: acceptance (survey 23 §3)', () => {
         (entries) => entries.some((entry) => entry.kind === 'run-end'),
       );
       const reports = (await entriesOf(app, 'book-reserved')).filter(
-        (entry) => entry.kind === 'tool-error' && entry.data.name === 'write_file',
+        (entry) => entry.kind === 'tool-error' && entry.data.name === 'check_grounding',
       );
       expect(reports).toHaveLength(1);
       expect(reports[0]?.kind === 'tool-error' ? reports[0].data.message : '').toContain(
