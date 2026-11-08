@@ -2,42 +2,35 @@
 
 Source for the rules that GitHub tracker #26 applies. #26 keeps the spec table, the phase checklist and the closed-ticket audit (section 5). Change a rule here on `main` first, then update #26.
 
-## Closure rule and gates (applied 2026-11-08)
+## Closure rule and gates (replaced 2026-11-08, scout q1 to q4)
 
 A phase ticket closes only when all of these hold:
 - Its tickets are closed.
 - Every acceptance criterion of the phase in the spec passes, checked item by item.
-- Every gating item for the phase (G1 to G5 below) is answered or done.
+- Every gating item for the phase (G2 to G5 below) is answered or done.
 
-Provisional items do not block closure. A provisional item is built on the survey's recommended default, marked provisional in code, and listed below for the owner to confirm or amend. An amendment is new work, tracked in the owning ticket.
+Human-only checks (G1) do not gate phase closure. They go on the end-of-build validation list below, which runs once the app runs end to end.
+
+Provisional items do not block closure. For each owner stop with a recommended default, the default is accepted, implemented, and marked provisional in code and on #26. Where no default is stated, pick the option that changes no accepted spec criterion and no published contract. Any change to an accepted criterion or published contract returns to the owner, and that stop gates its phase until the owner answers. An amendment is new work, tracked in the owning ticket.
 
 Gate classes:
-- **G1** owner-only check: hardware, clean machine, real device or browser, publish secrets, releases, manual document check. An agent cannot run it.
+- **G1** owner-only check. Moved to the end-of-build list below. Does not gate closure.
 - **G2** map conflict. The surveys say each one gates the phase it blocks.
-- **G3** amendment of an accepted spec criterion, a published contract, another module's gate, or a spec definition.
+- **G3** amendment of an accepted spec criterion, a published contract, another module's gate, or a spec definition. Gates until the owner answers.
 - **G4** no recommended default.
 - **G5** owner review of a spike or probe result.
 
-### Reopened 2026-11-08
-Each reopened ticket has a comment that says why. Reopening does not mean the work is wrong. It means the closure was not verified item by item.
-- Phase tickets (scout decision q2): #28, #29, #30, #31, #32, #33, #34, #35, #37, #38, #39, #40, #41, #43, #44, #45, #46, #47, #48, #51, #52, #53, #54, #55, #56, #60, #61, #65.
-- Specs (q2): #19 with its phases #33, #39, #44 and #52. #21 with its phases #41, #46, #54 and #60.
-- Phase #63 phase:editor-ui (q3): reopened for spec 21 criteria 4 and 6, which are only partly met on main.
-- Not reopened: #57. Its closing comment checks each criterion.
+### Withdrawn from this record (2026-11-08)
+The scout decisions q1 to q10 that were recorded here before the replacement are withdrawn. That covers the batch reopen of the phase tickets and specs #19 and #21, the reopen of #63, the chapter count for #62, the pending-change timing, the provenance location, the entity-ID rule, and the #71 edges as decisions. The replacement does not change GitHub. The tickets stay open, the reopen comments already on them stay, and the #71 native edges stay. The spec and code work named under the withdrawn decisions is neither started nor cancelled by this record.
 
-### Decisions recorded 2026-11-08 (scout session, approved by the owner)
-- **q1, closure rule:** adopted as written above.
-- **q2, batch closures:** reopened, as listed above. Each phase's acceptance is to be checked item by item.
-- **q3, #63:** reopened for criteria 4 and 6.
-- **q4, owner stops of #19 and #21:** classified only after the item-by-item check of their reopened phases. Not classified now.
-- **q5, chapter count for #62:** `grounding-claims.md` counts as the third chapter. #62 waits for #72. Check first whether the three shipped chapters (`examples/nonfiction/drafts/ch01.md` to `ch03.md`) already meet the spec's count. If they do, this wait is not needed.
-- **q6, item 11, pending-change timing:** adopt the first-propose model, and amend spec 23 to say so. The write tools must pass the first-read base. Open work: the spec amendment and the base-passing code change.
-- **q7, item 12, provenance:** optional provenance on the pending change, with an in-process `latestProvenance({targetPath})` query. Open work: the spec amendment, the code that writes the field, and the query.
-- **q8, item 20, entity IDs:** the Project store assigns entity IDs on accept, and prompts may not supply them. Open work: the spec amendment (#22 O7), the accept-time ID assignment in `commit()`, and routing entity outputs to `entities/`.
-- **q9, #71 edges:** added as native edges (cross-module gate, owner decision).
-- **q10, the proposal file:** kept uncommitted in the repo (`docs/scriba-plans/closure-blockers.md`).
+### Decisions recorded 2026-11-08 (scout q1 to q4, approved by the owner)
+- **q1, human-only checks:** G1 checks wait until the app runs end to end. They are collected on the end-of-build list and gate no phase before then.
+- **q2, owner stops with a default:** accept the survey default, implement it, and mark it provisional in code and on #26. Where none is stated, pick the option that changes no accepted criterion or published contract. Criterion or contract changes return to the owner.
+- **q3, #26 closure rule:** amended as in the closure rule above. The amendment and its reason are recorded on #26.
+- **q4, closure-blockers.md:** kept as a reference file with a superseded note. Its governance proposals no longer apply.
 
-### Owner-run checks (G1)
+### End-of-build validation list (G1 human-only checks, scout q1)
+Run once the app runs end to end. These checks do not gate phase closure.
 - #30 arm64 and amd64 checks, and the Tailscale sidecar run.
 - #36 ST-1 to ST-3 on real hardware.
 - #38 Secure matrix on real browsers.
@@ -54,6 +47,7 @@ Each reopened ticket has a comment that says why. Reopening does not mean the wo
 - #71 Word and EPUB open check.
 
 ### Gating map conflicts and amendments (G2, G3, G5)
+References to decisions q5 to q9 in the rows below are withdrawn. The G3 rows they touched are open again until the owner answers.
 - #36: G2, survey 16 item 3.
 - #42: G3, survey 16 items 11, 17, 20.
 - #49: G2, survey 16 item 3. G3, survey 16 item 23(a).
@@ -82,6 +76,7 @@ Each reopened ticket has a comment that says why. Reopening does not mean the wo
 - #73: search backend default (SearXNG-compatible, no key in v1).
 
 ### Native edges (blocked-by), added 2026-11-08
+These edges exist on GitHub and are unchanged by this record. The decision references on them are withdrawn.
 - #58 needs #36 (spec 18: ST-1 outcome).
 - #64 needs #62 and #70 (spec 22 line 222).
 - #67 needs #49 (spec 25 line 308: CI phase).
