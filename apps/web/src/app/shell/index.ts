@@ -5,6 +5,7 @@
 export { ApiClient } from './api/api-client';
 export { ApiError, SHELL_ERROR_CODES } from './api/api-error';
 export { featureRoute } from './feature-route';
+export { deviceClassGate } from './device/device-gate';
 export { DeviceClassService } from './device/device-class';
 export { ActiveProjectService } from './project/active-project';
 export {

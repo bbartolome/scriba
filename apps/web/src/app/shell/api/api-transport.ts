@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { type Observable, catchError, map, of, throwError } from 'rxjs';
 
 /** GET reads, POST commands, and PATCH a field-level merge (the setup-auth contract's writes). */
-export type HttpMethod = 'GET' | 'POST' | 'PATCH';
+export type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
 
 /** One HTTP answer. `status` is 0 when no answer came back. `body` is parsed JSON, or undefined. */
 export interface TransportResponse {

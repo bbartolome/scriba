@@ -115,6 +115,7 @@ describe('the Shell, rendered through its routes', () => {
       expect(navEntries(host).map((entry) => entry.label)).toEqual([
         'Home',
         'Projects',
+        'Tools',
         'Settings',
       ]);
     });
@@ -139,6 +140,7 @@ describe('the Shell, rendered through its routes', () => {
         { label: 'Home', icon: 'home', href: '/' },
         { label: 'Projects', icon: 'folder', href: '/projects' },
         { label: 'Dummy', icon: 'science', href: '/dummy' },
+        { label: 'Tools', icon: 'build', href: '/tools' },
         { label: 'Settings', icon: 'settings', href: '/settings' },
       ]);
     });
@@ -152,6 +154,7 @@ describe('the Shell, rendered through its routes', () => {
         'Home',
         'Projects',
         'Dummy',
+        'Tools',
         'Settings',
       ]);
       desktop.fixture.destroy();
@@ -383,6 +386,7 @@ describe('the Shell, rendered through its routes', () => {
         'Home',
         'Projects',
         'Dummy',
+        'Tools',
         'Settings',
       ]);
       outside.fixture.destroy();

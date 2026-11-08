@@ -6,8 +6,8 @@ import {
   TOOL_REGISTRY_ROUTES,
   ToolListQuerySchema,
   ValidateRequestSchema,
+  type LintPreview,
   type LintRequest,
-  type LintResult,
   type SaveToolRequest,
   type SetToolEnabledRequest,
   type ToolListQuery,
@@ -48,8 +48,8 @@ export class ToolRegistryController {
   // provisional: survey 21 §7 item 8 (the lint route never blocks; only save does)
   @Post(TOOL_REGISTRY_ROUTES.lint.path)
   @HttpCode(200)
-  lint(@Body(new ZodValidationPipe(LintRequestSchema)) body: LintRequest): LintResult {
-    return this.catalog.lint(body.yaml);
+  lint(@Body(new ZodValidationPipe(LintRequestSchema)) body: LintRequest): LintPreview {
+    return this.catalog.lint(body.yaml, body.name);
   }
 
   @Get(TOOL_REGISTRY_ROUTES.get.path)

@@ -1,7 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { LintResultSchema, type LintDiagnostic } from '@bbartolome/scriba-contracts/tool-registry';
+import {
+  LintPreviewSchema,
+  LintResultSchema,
+  type LintDiagnostic,
+} from '@bbartolome/scriba-contracts/tool-registry';
 import { createTempLibrary, startApp, type RunningApp, type TempLibrary } from '../support/app.js';
 import { api } from './support.js';
 
@@ -212,5 +216,75 @@ describe('phase:loader-validation: lint reports every rule with a line and a col
     await expect(
       readFile(`${library.booksDir}/.scriba/packs/user/tools/other_name.yaml`, 'utf8'),
     ).rejects.toThrow();
+  });
+});
+
+/**
+ * phase:editor-ui: the lint route answers with the form and port views when the YAML has no error,
+ * so the editor's preview is live (survey 21 §3, provisional). With an error it answers the
+ * diagnostics only, and the editor keeps its last valid preview.
+ */
+describe('phase:editor-ui: lint answers with the preview views when the YAML is clean', () => {
+  it('returns the form and the port views of a clean spec, from the same emitter as a saved tool', async () => {
+    const response = await api(running, 'POST', '/api/tools/lint', { yaml: specYaml() });
+    expect(response.status).toBe(200);
+    const preview = LintPreviewSchema.parse(response.body);
+
+    expect(preview.form?.fields.map((field) => field.key)).toEqual(['person', 'topic']);
+    expect(preview.ports?.inputs.map((port) => port.key)).toEqual(['person', 'topic']);
+    expect(preview.ports?.output.kind).toBe('draft');
+  });
+
+  it('omits the views when the YAML has an error, and still reports the diagnostic', async () => {
+    const response = await api(running, 'POST', '/api/tools/lint', {
+      yaml: specYaml({ prompt: 'Write about {{nobody}} and {{topic}}.' }),
+    });
+    expect(response.status).toBe(200);
+    const preview = LintPreviewSchema.parse(response.body);
+
+    expect(preview.form).toBeUndefined();
+    expect(preview.ports).toBeUndefined();
+    expect(preview.diagnostics.some((diagnostic) => diagnostic.severity === 'error')).toBe(true);
+  });
+
+  it('lints the editor\'s "New tool" template without an error, so a new tool starts with a live preview', async () => {
+    // Keep in step with NEW_TOOL_YAML in apps/web/.../tool-editor/tool-editor.page.ts.
+    const template = [
+      'schemaVersion: 1',
+      'name: new_tool',
+      'description: Describe what this tool does.',
+      'inputs:',
+      '  type: object',
+      '  properties:',
+      '    notes:',
+      '      type: string',
+      '      title: Notes',
+      '      description: Free text the tool should use.',
+      '  required: [notes]',
+      '  additionalProperties: false',
+      'output: draft',
+      'enabled: true',
+      'prompt: |',
+      '  Write the draft from these notes.',
+      '',
+      '  Notes: {{notes}}',
+      '',
+    ].join('\n');
+    const response = await api(running, 'POST', '/api/tools/lint', { yaml: template });
+    const preview = LintPreviewSchema.parse(response.body);
+
+    expect(preview.diagnostics.filter((diagnostic) => diagnostic.severity === 'error')).toEqual([]);
+    expect(preview.form).toBeDefined();
+  });
+  it('reports a name the save would refuse when the live lint is given that name', async () => {
+    const response = await api(running, 'POST', '/api/tools/lint', {
+      yaml: specYaml(),
+      name: 'other_tool',
+    });
+    expect(response.status).toBe(200);
+    const preview = LintPreviewSchema.parse(response.body);
+
+    expect(preview.diagnostics.some((diagnostic) => diagnostic.severity === 'error')).toBe(true);
+    expect(preview.form).toBeUndefined();
   });
 });
