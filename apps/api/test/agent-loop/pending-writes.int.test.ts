@@ -16,7 +16,7 @@ import {
   useScenario,
   type RunningAgentApp,
 } from './support.js';
-import { type TestMock } from '../providers/support.js';
+import { eventually, type TestMock } from '../providers/support.js';
 
 const VALID_GRAPH =
   '{"schemaVersion": 1, "view": "story", "name": "Cold open", "nodes": [{"id": "open", "kind": "beat", "label": "Open mid-scene", "position": {"x": 0, "y": 0}}], "edges": []}';
@@ -228,6 +228,50 @@ describe('phase:pending-writes: acceptance (survey 23 §3)', () => {
     expect(text.split('\\n- ').length - 1).toBe(20);
     expect(text).toMatch(/\.\.\.and \d+ more/);
   });
+  it('A3: a stopped run keeps its pending changes', async () => {
+    const projectId = await sampleProject(running, 'book-writes-stopped');
+    mock = await startMock(['write-then-hold']);
+    await useScenario(running, mock, 'write-then-hold');
+    log = await EventLog.open(running);
+    const answer = await call(running, 'POST', agentPath(projectId, '/runs'), {
+      intent: 'draft, then wait',
+    });
+    const { runId } = answer.body as { runId: string };
+    // Wait until the write has been proposed, while the run holds its connection open. The wait does not
+    // throw on a timeout, so the state it returns is asserted, and a missing write fails here.
+    const waited = await eventually(
+      () => call(running, 'GET', agentPath(projectId, '/current-run-state')),
+      (state) =>
+        (state.body as { run?: AgentRunState }).run?.cards.some(
+          (card) => card.name === 'write_file' && card.state === 'done',
+        ) === true,
+    );
+    expect(
+      (waited.body as { run?: AgentRunState }).run?.cards.some(
+        (card) => card.name === 'write_file' && card.state === 'done',
+      ),
+    ).toBe(true);
+
+    await call(running, 'POST', agentPath(projectId, `/runs/${runId}/stop`), {});
+    await log.until(
+      () => log?.agent(runId).some((event) => event.type === 'run-ended') === true,
+      'run end',
+    );
+
+    expect(log?.agent(runId).find((event) => event.type === 'run-ended')?.data['reason']).toBe(
+      'stopped',
+    );
+    const store = running.app.get(ProjectStoreProvider);
+    const kept = (await store.listPending(projectId)).filter(
+      (change) => change.targetPath === 'drafts/stopped.md',
+    );
+    expect(kept).toHaveLength(1);
+    expect(kept[0]?.proposed).toBe('Kept.\n');
+    expect(existsSync(join(running.library.booksDir, projectId, 'drafts', 'stopped.md'))).toBe(
+      false,
+    );
+  });
+
   it('A4: a graph already on disk, or proposed by another run, is not replaced: the new graph gets a numbered name', async () => {
     const projectId = await sampleProject(running, 'book-graph-on-disk');
     await mkdir(join(running.library.booksDir, projectId, 'graphs'), { recursive: true });
