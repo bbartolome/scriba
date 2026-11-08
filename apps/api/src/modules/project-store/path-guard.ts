@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { lstat, readdir, readlink, realpath, rm } from 'node:fs/promises';
+import { lstat, mkdir, readdir, readlink, realpath, rm, stat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { ProjectRelativePathSchema } from '@bbartolome/scriba-contracts/project-store';
 import { pathInvalid, projectError } from './errors.js';
@@ -179,4 +179,55 @@ export async function listNames(folder: string): Promise<string[]> {
 /** Removes a folder tree, ignoring its absence. Used to undo a half-made project. */
 export function removeTree(folder: string): Promise<void> {
   return rm(folder, { recursive: true, force: true });
+}
+
+/**
+ * The real path of an app-owned folder under the project, such as `.scriba/pending` or
+ * `drafts/.versions/<name>`. Callers may not name those paths (the guard refuses them), so the module's
+ * own writers and readers come here instead. Each segment is checked for containment before anything is
+ * created below it, so a link out of the project is refused. With `create` false, nothing is written and a
+ * missing folder is undefined. The folder itself must be a folder, not a file.
+ */
+export function appFolder(
+  project: ProjectLocation,
+  segments: readonly string[],
+  create: true,
+): Promise<string>;
+export function appFolder(
+  project: ProjectLocation,
+  segments: readonly string[],
+  create: false,
+): Promise<string | undefined>;
+export async function appFolder(
+  project: ProjectLocation,
+  segments: readonly string[],
+  create: boolean,
+): Promise<string | undefined> {
+  let logical = project.dir;
+  for (const segment of segments) {
+    logical = join(logical, segment);
+    const info = await lstat(logical).catch(() => undefined);
+    if (info === undefined) {
+      if (!create) {
+        return undefined;
+      }
+      await mkdir(logical).catch((error: unknown) => {
+        if ((error as { code?: unknown }).code !== 'EEXIST') {
+          throw error;
+        }
+      });
+    }
+    const real = await realpath(logical);
+    if (!isWithin(project.realDir, real)) {
+      throw projectError(
+        'PROJECT_PATH_OUTSIDE_PROJECT',
+        'That path resolves outside the project folder.',
+      );
+    }
+  }
+  const real = await realpath(logical);
+  if (segments.length > 0 && !(await stat(real)).isDirectory()) {
+    throw pathInvalid();
+  }
+  return real;
 }

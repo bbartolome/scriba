@@ -42,12 +42,12 @@ test('project from sample: start, activate, browse, and reject a parent path', a
   expect(entries).toEqual(['.gitignore', 'drafts', 'entities', 'project.yaml', 'sources']);
   expect(await readFile(join(folder, '.gitignore'), 'utf8')).toContain('.scriba/');
 
-  // The files view lists the outline and renders it read-only.
+  // The files view lists the outline. On desktop it opens in the editor (phase:pending-review), where a save
+  // is base-checked. Phones stay read-only, through the device gate.
   await row.getByRole('link', { name: 'Open files' }).click();
   await expect(page).toHaveURL(/\/projects\/demo-book\/files$/);
   await page.getByRole('button', { name: 'outline.md' }).click();
-  await expect(page.locator('.viewer h1')).toHaveText('Outline notes');
-  await expect(page.locator('textarea')).toHaveCount(0);
+  await expect(page.locator('.viewer textarea.editor')).toHaveValue(/Outline notes/);
 
   // Demo step 5: a parent-folder path is refused by the API, and the response names the code.
   const refused = await page.request.get(

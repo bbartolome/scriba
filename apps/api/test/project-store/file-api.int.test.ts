@@ -218,13 +218,17 @@ describe('phase:files acceptance (f): file API', () => {
     expect(await readFile(join(root(), 'project.yaml'), 'utf8')).toBe(yamlFor('Book'));
   });
 
-  it('refuses the overlay read, which belongs to the pending-review phase', async () => {
+  it('a read that names a run with no pending change for the path returns the disk content (the overlay is in pending.int.test.ts)', async () => {
     const answer = await call(
       h,
       'GET',
       `${projectPath('book', '/files/read')}?path=drafts%2Fch01.md&runId=run-1`,
     );
-    expect(answer.status).toBe(422);
-    expect(answer.body).toMatchObject({ error: { code: 'PROJECT_VALIDATION_FAILED' } });
+    expect(answer.status).toBe(200);
+    expect(answer.body).toMatchObject({
+      path: 'drafts/ch01.md',
+      content: await readFile(join(root(), 'drafts', 'ch01.md'), 'utf8'),
+    });
+    expect(answer.body).not.toHaveProperty('origin');
   });
 });

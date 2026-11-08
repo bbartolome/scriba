@@ -1,12 +1,29 @@
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
-import type { FileEntry, FileReadResult } from '@bbartolome/scriba-contracts/project-store';
-import { ApiError } from '../../../shell';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  OnInit,
+  signal,
+} from '@angular/core';
+import type {
+  DraftVersion,
+  FileEntry,
+  FileReadResult,
+} from '@bbartolome/scriba-contracts/project-store';
+import { ApiError, DeviceClassService } from '../../../shell';
 import { MarkdownPreviewView } from '../../../shared/preview/markdown-preview-view';
 import { ProjectStoreApi } from '../project-store.api';
 
 /** Whether the file is shown as rendered Markdown. Everything else is shown as plain text. */
 function isMarkdown(path: string): boolean {
   return /\.(md|markdown)$/i.test(path);
+}
+
+/** A top-level draft: `drafts/<name>`, with no further folder and a name that is not dotted. */
+function isTopLevelDraft(path: string): boolean {
+  return /^drafts\/(?!\.)[^/]+$/.test(path);
 }
 
 /** The last segment of a project-relative path. */
@@ -20,13 +37,14 @@ function depthOf(path: string): number {
 }
 
 /**
- * The files of one project, read only. The tree lists the project's files, and a text file opens as
- * rendered Markdown or as plain text. Editing waits for the Shell's editor (survey 20 §7 item 7), so
- * the view has no save action. A project that is not the active one is not browsed here (survey
- * 20 §7 item 23): the page offers to activate it instead.
+ * The files of one project. The tree lists the project's files. A text file opens for editing on desktop and
+ * tablet, where a save goes straight to disk with the base the file was read at. A save the disk refuses
+ * (the file changed since it was read) shows a stale-base warning. On a phone the file opens read-only, through
+ * the Shell's device gate (spec, "Files"). A top-level draft also lists its saved versions. A project that is
+ * not the active one is not browsed here (survey 20 §7 item 23): the page offers to activate it instead.
  */
-// provisional: survey 20 §7 item 7
-// provisional: survey 20 §7 item 22
+// PROVISIONAL (survey 20 item 7): the editor moves to this phase.
+// PROVISIONAL (survey 20 item 22): phones stay read-only until the Shell editor lands.
 @Component({
   selector: 'app-project-files-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,7 +65,14 @@ function depthOf(path: string): number {
         <button type="button" (click)="activate()">Activate {{ projectId() }}</button>
       }
       @case ('ready') {
-        <p class="note">Read-only. Editing arrives with the editor.</p>
+        <p class="note">
+          @if (canEdit()) {
+            A save goes straight to disk, and is refused if the file changed on disk since you
+            opened it.
+          } @else {
+            Read-only on this screen.
+          }
+        </p>
         <ul class="tree" aria-label="Project files">
           @for (entry of entries(); track entry.path) {
             <li [style.padding-left.rem]="depthOf(entry.path) * 1.25">
@@ -63,10 +88,45 @@ function depthOf(path: string): number {
         @if (opened(); as file) {
           <section class="viewer" [attr.aria-label]="file.path">
             <h2>{{ file.path }}</h2>
-            @if (isMarkdown(file.path)) {
+            @if (canEdit()) {
+              @if (stale()) {
+                <p class="stale" role="alert" data-testid="stale-base">
+                  {{ file.path }} changed on disk since you opened it, so this save was refused.
+                  Reload from disk to see the saved version. Reloading replaces your text here.
+                </p>
+              }
+              <textarea
+                class="editor"
+                aria-label="File text"
+                rows="20"
+                [value]="draft()"
+                (input)="edit($event)"
+              ></textarea>
+              <div class="actions">
+                <button type="button" [disabled]="!dirty()" (click)="save()">Save</button>
+                @if (stale()) {
+                  <button type="button" (click)="reload()">Reload from disk</button>
+                }
+              </div>
+            } @else if (isMarkdown(file.path)) {
               <app-markdown-preview [draft]="file.content" />
             } @else {
               <pre>{{ file.content }}</pre>
+            }
+            @if (isTopLevelDraft(file.path)) {
+              <h3>History</h3>
+              @if (versions().length === 0) {
+                <p class="note">No saved versions yet.</p>
+              } @else {
+                <ul class="versions" aria-label="Saved versions">
+                  @for (version of versions(); track version.id) {
+                    <li>
+                      {{ version.createdAt }}
+                      <span class="size">{{ version.size }} bytes</span>
+                    </li>
+                  }
+                </ul>
+              }
             }
           </section>
         }
@@ -96,8 +156,24 @@ function depthOf(path: string): number {
     .note {
       color: var(--mat-sys-on-surface-variant, #555);
     }
-    .error {
+    .error,
+    .stale {
       color: var(--mat-sys-error, #b3261e);
+    }
+    .editor {
+      width: 100%;
+      font: inherit;
+      font-family: ui-monospace, monospace;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      min-height: 44px;
+      align-items: center;
+    }
+    .versions {
+      list-style: none;
+      padding: 0;
     }
     pre {
       white-space: pre-wrap;
@@ -107,6 +183,7 @@ function depthOf(path: string): number {
 })
 export class ProjectFilesPage implements OnInit {
   private readonly api = inject(ProjectStoreApi);
+  private readonly device = inject(DeviceClassService);
 
   /** The project named in the route. */
   readonly projectId = input.required<string>();
@@ -115,8 +192,21 @@ export class ProjectFilesPage implements OnInit {
   readonly entries = signal<readonly FileEntry[]>([]);
   readonly opened = signal<FileReadResult | undefined>(undefined);
   readonly error = signal<string | undefined>(undefined);
+  /** The text in the editor. It starts as the disk content, and differs once the author types. */
+  readonly draft = signal('');
+  /** Set when a save was refused because the file changed on disk since it was read. */
+  readonly stale = signal(false);
+  readonly versions = signal<readonly DraftVersion[]>([]);
+
+  /** Phones read; desktop and tablet edit (spec, "Files", through the Shell's device gate). */
+  readonly canEdit = computed(() => this.device.current() !== 'phone');
+  readonly dirty = computed(() => {
+    const file = this.opened();
+    return file !== undefined && this.draft() !== file.content;
+  });
 
   readonly isMarkdown = isMarkdown;
+  readonly isTopLevelDraft = isTopLevelDraft;
   readonly nameOf = nameOf;
   readonly depthOf = depthOf;
 
@@ -135,9 +225,51 @@ export class ProjectFilesPage implements OnInit {
   open(path: string): void {
     this.error.set(undefined);
     this.api.readFile(this.projectId(), path).subscribe({
-      next: (file) => this.opened.set(file),
+      next: (file) => {
+        this.opened.set(file);
+        this.draft.set(file.content);
+        this.stale.set(false);
+        this.loadVersions(file.path);
+      },
       error: (error: unknown) => this.fail(error),
     });
+  }
+
+  /** Edit: the typed text becomes the draft, and a save sends it with the base the file was read at. */
+  edit(event: Event): void {
+    this.draft.set((event.target as HTMLTextAreaElement).value);
+  }
+
+  save(): void {
+    const file = this.opened();
+    if (file === undefined) {
+      return;
+    }
+    const content = this.draft();
+    this.error.set(undefined);
+    this.api
+      .writeFile(this.projectId(), { path: file.path, content, baseHash: file.hash })
+      .subscribe({
+        next: (result) => {
+          this.opened.set({ ...file, content, hash: result.hash, mtime: result.mtime });
+          this.stale.set(false);
+        },
+        error: (error: unknown) => {
+          if (error instanceof ApiError && error.code === 'PROJECT_WRITE_CONFLICT') {
+            this.stale.set(true);
+            return;
+          }
+          this.fail(error);
+        },
+      });
+  }
+
+  /** Reload from disk: the stale warning is cleared, and the editor takes the disk content. */
+  reload(): void {
+    const file = this.opened();
+    if (file !== undefined) {
+      this.open(file.path);
+    }
   }
 
   private load(): void {
@@ -160,6 +292,17 @@ export class ProjectFilesPage implements OnInit {
           error: (error: unknown) => this.fail(error),
         });
       },
+      error: (error: unknown) => this.fail(error),
+    });
+  }
+
+  private loadVersions(path: string): void {
+    if (!isTopLevelDraft(path)) {
+      this.versions.set([]);
+      return;
+    }
+    this.api.listVersions(this.projectId(), path).subscribe({
+      next: (listing) => this.versions.set(listing.versions),
       error: (error: unknown) => this.fail(error),
     });
   }

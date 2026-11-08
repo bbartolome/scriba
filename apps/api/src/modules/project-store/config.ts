@@ -12,6 +12,12 @@ export interface ProjectStoreConfig {
   readonly booksDir: string;
   /** `SCRIBA_EXAMPLES_DIR`: the folder whose subfolders are the start-from-sample samples. */
   readonly examplesDir: string;
+  /**
+   * `SCRIBA_WATCHER`: whether the optional watcher runs over the active project. It only refreshes the UI
+   * and the conflict flags, so correctness never depends on it. Off unless set, so a test that builds this
+   * config directly gets no watcher.
+   */
+  readonly watcher?: boolean;
 }
 
 /**
@@ -37,11 +43,25 @@ function resolveExamplesDir(env: Readonly<Record<string, string | undefined>>): 
     : DEV_EXAMPLES_DIR;
 }
 
+/** `SCRIBA_WATCHER` is `true` or `false`. Unset, it takes the spec's default from the contracts. */
+function resolveWatcher(env: Readonly<Record<string, string | undefined>>): boolean {
+  const raw = env['SCRIBA_WATCHER'];
+  const value = raw === undefined || raw === '' ? SCRIBA_ENV_DEFAULTS.SCRIBA_WATCHER : raw;
+  if (value !== 'true' && value !== 'false') {
+    throw new Error(`Invalid SCRIBA_WATCHER=${JSON.stringify(value)}: must be true or false.`);
+  }
+  return value === 'true';
+}
+
 /** Reads the module's configuration from the environment, through Platform's parser for the library. */
 export function projectStoreConfigFromEnv(
   env: Readonly<Record<string, string | undefined>>,
 ): ProjectStoreConfig {
-  return { booksDir: parseScribaEnv(env).booksDir, examplesDir: resolveExamplesDir(env) };
+  return {
+    booksDir: parseScribaEnv(env).booksDir,
+    examplesDir: resolveExamplesDir(env),
+    watcher: resolveWatcher(env),
+  };
 }
 
 /** The sample folder for a sample id. The id is a single folder name, so it cannot leave the folder. */
