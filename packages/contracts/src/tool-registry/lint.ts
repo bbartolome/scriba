@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { ToolNameSchema } from './common.js';
+import { FormDescriptorSchema, PortDescriptorSchema } from './descriptors.js';
 import { LintSeveritySchema } from './vocabulary.js';
 
 /**
@@ -45,5 +47,24 @@ export type LintCounts = z.infer<typeof LintCountsSchema>;
 // provisional: survey 21 §7 item 8
 export const LintRequestSchema = z.object({
   yaml: z.string(),
+  /**
+   * The tool name the YAML is being saved under. With it, the live lint checks the name the same way
+   * the save does, so a rename that the save would refuse is not reported clean.
+   */
+  // provisional: survey 21 §3 (phase:editor-ui: the live lint names the file it is checked against)
+  name: ToolNameSchema.optional(),
 });
 export type LintRequest = z.infer<typeof LintRequestSchema>;
+
+/**
+ * `POST /api/tools/lint` answers with the diagnostics, and with the form and port views when the
+ * submitted YAML has no error. The editor's live preview draws from these views, which come from the
+ * same emitter as a saved tool. With errors the views are absent, and the editor keeps its last valid
+ * preview.
+ */
+// provisional: survey 21 §3 (phase:editor-ui: live preview of unsaved YAML)
+export const LintPreviewSchema = LintResultSchema.extend({
+  form: FormDescriptorSchema.optional(),
+  ports: PortDescriptorSchema.optional(),
+});
+export type LintPreview = z.infer<typeof LintPreviewSchema>;

@@ -7,6 +7,7 @@ import {
   inject,
   input,
   linkedSignal,
+  output,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -196,6 +197,8 @@ export class ToolFormComponent {
   private readonly api = inject(ToolRegistryApi);
   private readonly destroyRef = inject(DestroyRef);
 
+  /** Counts the edits a person has made, so a check answered after an edit is not reported. */
+  private edits = 0;
   readonly detail = input.required<ToolDetail>();
   readonly layout = input<ToolFormLayout>('form');
   /** The active project's entities. Each picker filters them by its kinds. */
@@ -204,6 +207,10 @@ export class ToolFormComponent {
   readonly styleDefault = input<string | undefined>(undefined);
   /** The Graph runner's port handle. Without one, a plain handle mark is drawn. */
   readonly portHandle = input<TemplateRef<PortHandleContext> | undefined>(undefined);
+  /** Emits the validated arguments and the entity IDs to resolve, after a successful check. */
+  readonly validated = output<ValidateResponse>();
+  /** Emits when a person edits a field, so a caller can drop arguments it checked before. */
+  readonly changed = output<void>();
 
   protected readonly fields = computed(() => this.detail().form?.fields ?? []);
   // The node body draws the port rows and the params from the descriptor, which keeps params to non-port fields (survey 21 §7 item 13).
@@ -230,7 +237,11 @@ export class ToolFormComponent {
   }
 
   protected setValue(key: string, value: FieldValue | undefined): void {
+    this.edits += 1;
     this.values.update((current) => ({ ...current, [key]: value }));
+    // A result describes the arguments it checked, so an edit makes it stale.
+    this.result.set(null);
+    this.changed.emit();
   }
 
   protected argumentsText(done: ValidateResponse): string {
@@ -243,14 +254,21 @@ export class ToolFormComponent {
     this.checking.set(true);
     this.failure.set(null);
     const args = toArguments(this.fields(), this.values());
+    const version = this.edits;
+    const snapshot = this.values();
     this.api
       .validate(this.detail().name, { mode: 'full', arguments: args })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (done) => {
           this.checking.set(false);
+          // A check answered after an edit describes arguments the form no longer shows, so it is dropped.
+          if (version !== this.edits || snapshot !== this.values()) {
+            return;
+          }
           this.issues.set(NO_ISSUES);
           this.result.set(done);
+          this.validated.emit(done);
         },
         error: (error: unknown) => {
           this.checking.set(false);

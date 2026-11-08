@@ -10,9 +10,24 @@ import {
   type ProjectListResponse,
 } from '@bbartolome/scriba-contracts/project-store';
 import {
+  BuiltInToolSchema,
+  type BuiltInTool,
+  DeleteToolResponseSchema,
+  type DeleteToolResponse,
+  ExecuteResponseSchema,
+  type ExecuteResponse,
+  LintPreviewSchema,
+  type LintPreview,
+  SaveToolResponseSchema,
+  type SaveToolResponse,
+  SetToolEnabledResponseSchema,
+  type SetToolEnabledResponse,
   TOOL_REGISTRY_ROUTES,
+  type ToolCallInput,
   type ToolDetail,
   ToolDetailSchema,
+  ToolListResponseSchema,
+  type ToolListResponse,
   type ValidateRequest,
   type ValidateResponse,
   ValidateResponseSchema,
@@ -36,8 +51,53 @@ function fill(template: string, params: Readonly<Record<string, string>>): strin
 export class ToolRegistryApi {
   private readonly client = inject(ApiClient);
 
+  listTools(): Observable<ToolListResponse> {
+    return this.client.get(TOOL_REGISTRY_ROUTES.list.path, ToolListResponseSchema);
+  }
+
   getTool(name: string): Observable<ToolDetail> {
     return this.client.get(fill(TOOL_REGISTRY_ROUTES.get.path, { name }), ToolDetailSchema);
+  }
+
+  builtIn(name: string): Observable<BuiltInTool> {
+    return this.client.get(fill(TOOL_REGISTRY_ROUTES.builtin.path, { name }), BuiltInToolSchema);
+  }
+
+  /**
+   * Lints unsaved YAML and writes nothing. The views come back when the YAML has no error. A name
+   * makes the check match the save: the YAML must then declare that name.
+   */
+  lint(yaml: string, name?: string): Observable<LintPreview> {
+    return this.client.post(
+      TOOL_REGISTRY_ROUTES.lint.path,
+      name === undefined ? { yaml } : { yaml, name },
+      LintPreviewSchema,
+    );
+  }
+
+  /** Writes the YAML to the user pack under `name`. A built-in is copied on write. */
+  save(name: string, yaml: string): Observable<SaveToolResponse> {
+    return this.client.put(
+      fill(TOOL_REGISTRY_ROUTES.save.path, { name }),
+      { yaml },
+      SaveToolResponseSchema,
+    );
+  }
+
+  /** Removes the user copy, which reverts to the built-in, or a user-only tool. */
+  remove(name: string): Observable<DeleteToolResponse> {
+    return this.client.delete(
+      fill(TOOL_REGISTRY_ROUTES.delete.path, { name }),
+      DeleteToolResponseSchema,
+    );
+  }
+
+  setEnabled(name: string, enabled: boolean): Observable<SetToolEnabledResponse> {
+    return this.client.put(
+      fill(TOOL_REGISTRY_ROUTES.enabled.path, { name }),
+      { enabled },
+      SetToolEnabledResponseSchema,
+    );
   }
 
   validate(name: string, request: ValidateRequest): Observable<ValidateResponse> {
@@ -45,6 +105,15 @@ export class ToolRegistryApi {
       fill(TOOL_REGISTRY_ROUTES.validate.path, { name }),
       request,
       ValidateResponseSchema,
+    );
+  }
+
+  /** Runs the tool against the arguments and the caller's resolved entities. Writes no files. */
+  execute(name: string, input: ToolCallInput): Observable<ExecuteResponse> {
+    return this.client.post(
+      fill(TOOL_REGISTRY_ROUTES.execute.path, { name }),
+      input,
+      ExecuteResponseSchema,
     );
   }
 

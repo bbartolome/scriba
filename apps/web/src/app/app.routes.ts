@@ -53,12 +53,13 @@ export const routes: Routes = [
     minClass: 'phone',
     scope: 'project',
   }),
-  // The Tools dev preview has no nav entry yet. The editor phase adds it to the nav (survey 21 §3).
+  // The Tools list is reachable on every phone. Its editor child needs a tablet or larger (survey 21 §3).
   featureRoute({
     path: 'tools',
     load: () =>
       import('./features/tool-registry').then((feature) => feature.TOOL_REGISTRY_FEATURE_ROUTES),
-    minClass: 'tablet',
+    nav: { label: 'Tools', icon: 'build', order: 15 },
+    minClass: 'phone',
   }),
   // provisional: survey 18 §7 item 9 (the settings route is /settings; the Shell confirms it)
   // The settings page (survey 18 §3, setup-flow): identity, preferences, the Model providers panel

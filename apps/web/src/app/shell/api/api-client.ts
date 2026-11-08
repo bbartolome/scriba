@@ -30,6 +30,14 @@ export class ApiClient {
     return this.request('PATCH', path, body, schema);
   }
 
+  put<T>(path: string, body: unknown, schema: ZodType<T>): Observable<T> {
+    return this.request('PUT', path, body, schema);
+  }
+
+  delete<T>(path: string, schema: ZodType<T>): Observable<T> {
+    return this.request('DELETE', path, undefined, schema);
+  }
+
   private request<T>(
     method: HttpMethod,
     path: string,

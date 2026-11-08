@@ -8,7 +8,7 @@ import {
   type FunctionListResponse,
   type GenrePackName,
   type Origin,
-  type LintResult,
+  type LintPreview,
   type SaveToolResponse,
   type SetToolEnabledResponse,
   type ToolDetail,
@@ -22,6 +22,8 @@ import { toolError } from '../errors.js';
 import { offeredTools } from '../executor/offering.js';
 import type { ActiveProject } from '../executor/project-context.js';
 import type { LoadedTool } from '../executor/tool-source.js';
+import { emitViews } from '../spec/emit.js';
+import { readFields } from '../spec/fields.js';
 import { lintToolSpec } from '../spec/lint.js';
 import { TOOL_REGISTRY_CONFIG, type ToolRegistryConfig } from './config.js';
 import {
@@ -165,10 +167,38 @@ export class ToolCatalogService implements OnModuleInit {
     return { entityTypes };
   }
 
-  /** `POST /api/tools/lint`: lints submitted YAML and writes nothing. The result is a 200 either way. */
-  lint(yaml: string): LintResult {
-    const result = lintToolSpec(yaml, { knownKinds: this.knownKinds, strictKinds: false });
-    return { diagnostics: result.diagnostics };
+  /**
+   * `POST /api/tools/lint`: lints submitted YAML and writes nothing. The result is a 200 either way.
+   * With no error, the form and port views come back too, so the editor's preview is live.
+   */
+  lint(yaml: string, expectedName?: string): LintPreview {
+    const result = lintToolSpec(yaml, {
+      expectedName,
+      knownKinds: this.knownKinds,
+      strictKinds: false,
+    });
+    const hasErrors = result.diagnostics.some((diagnostic) => diagnostic.severity === 'error');
+    if (hasErrors || result.spec === undefined) {
+      return { diagnostics: result.diagnostics };
+    }
+    try {
+      const views = emitViews(result.spec, readFields(result.spec));
+      return { diagnostics: result.diagnostics, form: views.form, ports: views.ports };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        diagnostics: [
+          ...result.diagnostics,
+          {
+            severity: 'error',
+            rule: 'emit',
+            message: `The tool could not be emitted: ${message}`,
+            line: 1,
+            column: 1,
+          },
+        ],
+      };
+    }
   }
 
   /**

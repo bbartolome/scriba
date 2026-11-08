@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { type CanMatchFn, Router } from '@angular/router';
+import { type CanMatchFn, Router, type UrlSegment } from '@angular/router';
 import {
   DEFAULT_MIN_CLASS,
   DEVICE_CLASS_RANK,
@@ -22,6 +22,19 @@ export const deviceClassGate: CanMatchFn = (route, segments) => {
   if (DEVICE_CLASS_RANK[device] >= DEVICE_CLASS_RANK[minClass]) {
     return true;
   }
-  const from = `/${segments.map((segment) => segment.path).join('/')}`;
-  return inject(Router).createUrlTree([LARGER_SCREEN_PATH], { queryParams: { from } });
+  const router = inject(Router);
+  const from = requestedPath(router, segments);
+  return router.createUrlTree([LARGER_SCREEN_PATH], { queryParams: { from } });
 };
+
+/**
+ * The path the person asked for. A child entry is given only its own segments, so the whole URL
+ * is read from the navigation in progress, and the segments are the fallback.
+ */
+function requestedPath(router: Router, segments: readonly UrlSegment[]): string {
+  const extracted = router.currentNavigation()?.extractedUrl;
+  if (extracted !== undefined) {
+    return extracted.toString().split(/[?#]/)[0] ?? '/';
+  }
+  return `/${segments.map((segment) => segment.path).join('/')}`;
+}
