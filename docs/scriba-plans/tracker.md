@@ -136,3 +136,12 @@ These go beyond the map. Revisit them in the owning spec if any of them is wrong
 - **SSE module names:** the `module` value in the event envelope is the module's slug (`agent-loop`, `graph-runner`, `compile-export`, …).
 - **Tailnet identity header:** it is trusted only from a loopback peer with the tailnet Host. ST-1 checks the real peer addresses.
 - **Glossary gap:** "agent run", an agent-loop execution as distinct from a recipe **run**, is used in the specs and should be added to `GLOSSARY.md` through `/domain-modeling`.
+
+## Phase record: #28 phase:scaffold (2026-11-09)
+
+- Verification on main at 4e8a37d: `npm run build`, `npm test` and `npm run lint` all pass from the root. Test suites: 601, 506, 307, 15 and 14 tests; no type errors; examples-check reports 0 errors.
+- Acceptance criteria (survey 16 lines 28 to 38): the 11 criteria are covered by named tests in apps/api/test (boot, healthz-version, events, headers, tailnet, settings, errors-validation, shutdown, boundaries.rule, config, static, dev-origin, dev-origin-guard). Criterion 38 (ci.yml green on the scaffold PR) is open: the decision on whether the green run on PR #109 counts is pending.
+- Owner stops taking the stated default, recorded as provisional on this tracker: survey 16 section 7 items 1, 2, 3, 4, 5, 10, 16 and 24. Item 10's default is already in code (apps/api/src/main.ts binds 127.0.0.1 unless --listen-all; apps/api/src/modules/setup-auth/guard.ts reads SCRIBA_DEV_ORIGINS).
+- Owner-pending: item 11 (installer fallback and pre-listen setup-url). It is a criterion change (G3). It gates phase:setup-auth, not phase:scaffold.
+- Next unblocked phase: #29 phase:test-harness, which is blocked only by #28.
+- G1 checks are not gates. They go to the end-of-build validation list.
