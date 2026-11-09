@@ -157,3 +157,14 @@ These go beyond the map. Revisit them in the owning spec if any of them is wrong
   - 47, CI runs the e2e and uploads traces on failure: .github/workflows/ci.yml, the E2E job and the trace upload step (lines 55 to 66).
 - Owner stops 21 and 22 take their stated defaults, recorded as provisional on this tracker. Item 21: disconnect recording and the empty model list are data-file steps (mock tests at lines 292 and 315). Item 22: one journey spec with five placeholder steps and no sixth step, so no owner approval is owed.
 - Phase #29 closed on tracker #26. The next phase is recorded from survey 16 and survey 17 in a later update.
+
+## Phase record: #30 phase:image-compose (2026-11-09)
+
+- Built locally with deploy/build.sh after the fix in deploy/Dockerfile (the runtime stage now copies apps/api/node_modules, which holds ajv 8.20.0). The image starts, the healthcheck is healthy, and inside the container GET /healthz returns {"status":"ok"}.
+- Criterion 49 (runtime contents and size): pandoc 3.13 and typst 0.15.1 are present, and git, gcc and make are absent. Image size measured at 815,526,974 bytes. That is above the 300 to 400 MB target in user story 26, and it is recorded, not treated as a criterion failure.
+- Criterion 50 (no-mount refusal and writable-mount /healthz): the no-mount run exits 1 with a message that names UID 1000 and GID 1000 (app-state.ts:64 to 68). The writable-mount /healthz returns ok inside the container.
+- Criterion 52 (ownership): /books/.scriba is created inside the container, owned by uid 1000. Host-side ownership cannot be checked from the sandbox; it goes on the end-of-build validation list.
+- Criterion 54 (host.docker.internal resolves inside scriba): verified.
+- Owner-only host checks (51, 53, 55 and the native arm64 build) go on the end-of-build validation list (G1). They gate no phase.
+- Still missing from the repo, and not acceptance criteria: the Serve candidate (deploy/tailscale-serve.json) and a true multi-architecture build script (deploy/build.sh is single-architecture). They are listed in the phase's work (survey 16 line 48) and are tracked as follow-ups.
+- Phase #30 closed on tracker #26.
