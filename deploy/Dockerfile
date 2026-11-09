@@ -64,6 +64,9 @@ COPY --from=build /src/package.json ./package.json
 COPY --from=build /src/packages/contracts ./packages/contracts
 COPY --from=build /src/apps/api/dist ./apps/api/dist
 COPY --from=build /src/apps/api/package.json ./apps/api/package.json
+# apps/api's own production dependencies. ajv 8 is nested here because the root holds a different
+# ajv (package-lock.json), so the root node_modules copy above does not include it.
+COPY --from=build /src/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /src/apps/web/dist ./apps/web/dist
 COPY --from=build /src/packages/packs /opt/scriba/packs
 COPY --from=build /src/examples /opt/scriba/examples
