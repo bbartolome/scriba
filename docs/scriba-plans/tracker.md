@@ -145,3 +145,15 @@ These go beyond the map. Revisit them in the owning spec if any of them is wrong
 - Owner-pending: item 11 (installer fallback and pre-listen setup-url). It is a criterion change (G3). It gates phase:setup-auth, not phase:scaffold.
 - Next unblocked phase: #29 phase:test-harness, which is blocked only by #28.
 - G1 checks are not gates. They go to the end-of-build validation list.
+
+## Phase record: #29 phase:test-harness (2026-11-09)
+
+- Acceptance criteria 42 to 47 (survey 16 lines 41 to 47), each mapped to its named test on main at 4e8a37d:
+  - 42, streamed tool call with split arguments, then a text answer: e2e/fixtures/mock-openai/mock-openai.test.ts, first test.
+  - 43, malformed-tool-call retry: the same file, the malformed-tool-call test.
+  - 44, status with headers (429 with Retry-After), delay, drop mid-stream, recorded requests readable and resettable: the same file, the status, delay, drop, and reset tests.
+  - 45, parallel scenarios do not interfere: the same file, the parallel test.
+  - 46, npm run e2e boots the app, app-loads check, five journey steps reported pending: e2e/tests/journey.spec.ts, exercised by the CI E2E job. A local run of npm run e2e was not done in this session, so the evidence is the CI run on main.
+  - 47, CI runs the e2e and uploads traces on failure: .github/workflows/ci.yml, the E2E job and the trace upload step (lines 55 to 66).
+- Owner stops 21 and 22 take their stated defaults, recorded as provisional on this tracker. Item 21: disconnect recording and the empty model list are data-file steps (mock tests at lines 292 and 315). Item 22: one journey spec with five placeholder steps and no sixth step, so no owner approval is owed.
+- Phase #29 closed on tracker #26. The next phase is recorded from survey 16 and survey 17 in a later update.
